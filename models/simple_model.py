@@ -42,13 +42,13 @@ class SeqModel(nn.Module):
 
         # fc layer
         logits = bert_hidden.logits
-        loss = bert_hidden.loss
+        # loss = bert_hidden.loss
 
         # crf loss
-        # crf_loss = - self.crf_layer(logits, gold, mask=mask)
+        loss = - self.crf_layer(logits, gold, mask=mask)
         # crf_loss = self.loss(logits.view(-1, self.label_num), gold.view(-1))
-        # pred = torch.Tensor(self.crf_layer.decode(logits)).cuda()
-        pred = torch.max(log_softmax(logits, dim=-1), dim=-1).indices
+        pred = torch.Tensor(self.crf_layer.decode(logits)).cuda()
+        # pred = torch.max(log_softmax(logits, dim=-1), dim=-1).indices
         zero = torch.zeros(*gold.shape, dtype=gold.dtype).cuda()
         eq = torch.eq(pred, gold.float())
         acc = torch.sum(eq * acc_mask.float()) / torch.sum(acc_mask.float())
@@ -68,7 +68,7 @@ class SeqModel(nn.Module):
         logits = bert_hidden.logits
 
         # crf decode
-        # tag_seq = self.crf_layer.decode(logits, mask=mask)[0]
-        tag_seq = torch.max(log_softmax(logits[mask.bool()], dim=-1), dim=-1).indices
-        tag_seq = tag_seq.cpu().detach().numpy().tolist()
+        tag_seq = self.crf_layer.decode(logits, mask=mask)[0]
+        # tag_seq = torch.max(log_softmax(logits[mask.bool()], dim=-1), dim=-1).indices
+        # tag_seq = tag_seq.cpu().detach().numpy().tolist()
         return tag_seq
