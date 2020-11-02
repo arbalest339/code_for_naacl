@@ -1,0 +1,6 @@
+*.json
+*.npy
+*.pyc
+*.pkl
+*.vec
+*.bin
