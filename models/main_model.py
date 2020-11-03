@@ -76,6 +76,10 @@ class TransModel(nn.Module):
 
         return transd_loss, torch.zeros((1)), torch.zeros((1))
 
+    def encoder(self, batch_r):
+        dp_emb = self.transd.encoder(batch_r)
+        return dp_emb
+
     def save_embedding(self):
         np.save(self.dp_save_path, self.dp_emb)
 
@@ -93,7 +97,7 @@ class SeqModel(nn.Module):
         self.bn = nn.BatchNorm1d(flags.max_length)
 
         # Pre-trained BERT model
-        self.bert = BertModel(bertconfig)
+        self.bert = BertForTokenClassification(bertconfig)
         # Dropout to avoid overfitting
         self.dropout = nn.Dropout(flags.dropout_rate)
 
@@ -114,8 +118,9 @@ class SeqModel(nn.Module):
 
     def forward(self, token, pos, ner, arc, matrix, gold, mask, acc_mask):
         # BERT's last hidden layer
-        bert_hidden = self.bert(token, encoder_attention_mask=mask, attention_mask=mask)[0]
-        bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
+        # bert_hidden = self.bert(token, encoder_attention_mask=mask, attention_mask=mask)[0]
+        bert_hidden = self.bert(token, labels=gold, attention_mask=mask).hidden_states[-1]
+        # bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
         bert_emb = self.bert2gcn(bert_hidden)     # bert fc batch_size, max_length, gcn_input_dim
         bert_emb = self.bn(bert_emb)
         bert_emb = self.act(bert_emb)
@@ -136,7 +141,7 @@ class SeqModel(nn.Module):
         logits = self.act(logits)
 
         # crf loss
-        crf_loss = - self.crf_layer(logits, gold, mask=mask)
+        crf_loss = - self.crf_layer(logits, gold, mask=mask, reduction="mean")
         # crf_loss = self.loss(logits.view(-1, self.label_num), gold.view(-1))
         pred = torch.Tensor(self.crf_layer.decode(logits)).cuda()
         # pred = torch.max(log_softmax(logits, dim=-1), dim=-1).indices
@@ -155,8 +160,9 @@ class SeqModel(nn.Module):
         matrix = matrix.unsqueeze(dim=0)
         mask = mask.unsqueeze(dim=0)
 
-        bert_hidden = self.bert(token, encoder_attention_mask=mask, attention_mask=mask)[0]
-        bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
+        # bert_hidden = self.bert(token, encoder_attention_mask=mask, attention_mask=mask)[0]
+        bert_hidden = self.bert(token, attention_mask=mask).hidden_states[-1]
+        # bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
         bert_emb = self.bert2gcn(bert_hidden)     # bert fc batch_size, max_length, gcn_input_dim
         bert_emb = self.bn(bert_emb)
         bert_emb = self.act(bert_emb)
@@ -178,5 +184,6 @@ class SeqModel(nn.Module):
 
         # crf decode
         tag_seq = self.crf_layer.decode(logits, mask=mask)[0]
+        # tag_seq = torch.max(log_softmax(logits[mask.bool()], dim=-1), dim=-1).indices
         # tag_seq = tag_seq.cpu().detach().numpy().tolist()
         return tag_seq

@@ -12,19 +12,38 @@ from transformers import BertTokenizer, BertConfig
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR
 from tqdm import tqdm
 from models.main_model import TransModel
+# from models.main_model import SeqModel
+from models.simple_model import SeqModel
+from models.cnn_lstm_model import CnnLSTM
 from data_reader import OIEDataset
 from config import FLAGS, aggcnargs
 
 
 def select_model(flags, bertconfig, aggcnargs):
-    model = TransModel(flags, bertconfig, aggcnargs)
+    if FLAGS.task == "dp_emb":
+        model = TransModel(flags, bertconfig, aggcnargs)
+    else:
+        if FLAGS.model_type == "bert":
+            model = SeqModel(flags, bertconfig, aggcnargs)
+        elif FLAGS.model_type == "cnn_lstm":
+            model = CnnLSTM(flags, bertconfig, aggcnargs)
+
     return model
 
 
 def select_optim(flags, model):
-    optimizer = torch.optim.Adadelta([{"params": model.aggcn.parameters(), "lr": aggcnargs.lr},
-                                      {"params": model.bert.parameters()},
-                                      {"params": model.transd.parameters()}], lr=FLAGS.learning_rate)
+    if FLAGS.task == "dp_emb":
+        optimizer = torch.optim.Adadelta(model.parameters(), lr=FLAGS.learning_rate)
+    else:
+        if FLAGS.model_type == "bert":
+            # optimizer = torch.optim.Adadelta([{"params": model.aggcn.parameters(), "lr": aggcnargs.lr},
+            #                                   {"params": model.bert.parameters()},
+            #                                   {"params": model.transd.parameters()},
+            #                                   {"params": model.crf_layer.parameters()}], lr=FLAGS.learning_rate)
+            optimizer = torch.optim.Adadelta(model.parameters(), lr=FLAGS.learning_rate)
+        elif FLAGS.model_type == "cnn_lstm":
+            optimizer = torch.optim.Adadelta(model.parameters(), lr=FLAGS.learning_rate)
+
     return optimizer
 
 
@@ -54,8 +73,8 @@ def main():
     optimizer = select_optim(FLAGS, model)
     scheduler = ReduceLROnPlateau(optimizer, 'min', verbose=1, patience=3, factor=0.5, min_lr=1.e-8)
     # scheduler = CosineAnnealingLR(optimizer, T_max=(FLAGS.epoch // 9) + 1)
-    best_loss = 1000
-    patience = 6
+    best_acc = 0.0
+    patience = FLAGS.patient
 
     print("Start training", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
     for epoch in range(FLAGS.epoch):
@@ -94,14 +113,14 @@ def main():
         # scheduler.step(epoch)
         print(f"[{epoch + 1}/{FLAGS.epoch}] validset mean_loss: {valid_loss: 0.4f} valid mean_acc: {valid_acc: 0.4f}")
 
-        if valid_loss < best_loss:
-            best_loss = valid_loss
+        if valid_acc > best_acc:
+            best_acc = valid_acc
             print('Saving model...  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
             torch.save(model.state_dict(), FLAGS.checkpoint_path)
             if FLAGS.task == "dp_emb":
                 model.save_embedding()
             print('Saving model finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
-            patience = 6
+            patience = FLAGS.patient
         else:
             patience -= 1
 

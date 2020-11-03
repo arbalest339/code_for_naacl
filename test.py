@@ -9,8 +9,8 @@ import torch
 import numpy as np
 
 from transformers import BertTokenizer, BertConfig
-from models.main_model import SeqModel
-# from models.simple_model import SeqModel
+# from models.main_model import SeqModel
+from models.simple_model import SeqModel
 from data_reader import OIEDataset
 from config import FLAGS, aggcnargs
 

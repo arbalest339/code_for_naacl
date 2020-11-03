@@ -16,7 +16,7 @@ class Flags(object):
     def __init__(self):
         # task info
         self.language = "en"    # en, zh
-        self.task = "ore"    # dp_emb, ore, oie
+        self.task = "dp_emb"    # dp_emb, ore, oie
         self.model_type = "bert"   # cnn_lstm, bert
         self.is_continue = False
         self.is_test = False
@@ -38,10 +38,10 @@ class Flags(object):
         self.data_dir = os.path.join(curpath, f"{self.language}_data")  # Path of input data dir
         # self.data_path = os.path.join(self.data_dir, f"{self.task}_data_{self.language}.json")
         # self.matrix_path = os.path.join(self.data_dir, f"{self.task}_dp_matrix_{self.language}.json")
-        self.train_path = os.path.join(self.data_dir, f"{self.task}_test_{self.language}.json")     # !!!!!!!!!!!!!!!!!!!!!!
+        self.train_path = os.path.join(self.data_dir, f"{self.task}_train_{self.language}.json")     # !!!!!!!!!!!!!!!!!!!!!!
         self.dev_path = os.path.join(self.data_dir, f"{self.task}_dev_{self.language}.json")
         self.test_path = os.path.join(self.data_dir, f"{self.task}_test_{self.language}.json")
-        self.train_mat = os.path.join(self.data_dir, f"{self.task}_test_matrixs_{self.language}.npy")
+        self.train_mat = os.path.join(self.data_dir, f"{self.task}_train_matrixs_{self.language}.npy")
         self.dev_mat = os.path.join(self.data_dir, f"{self.task}_dev_matrixs_{self.language}.npy")
         self.test_mat = os.path.join(self.data_dir, f"{self.task}_test_matrixs_{self.language}.npy")
 
@@ -49,12 +49,12 @@ class Flags(object):
 
         # train hyper parameters
         self.learning_rate = 3.e-3
-        self.epoch = 50
-        self.batch_size = 32
+        self.epoch = 100
+        self.batch_size = 16
         self.test_batch_size = 8
         self.max_length = 128
         self.dropout_rate = 0.5
-        self.patient = 6
+        self.patient = 10
         self.use_cuda = True
 
         # TransD config

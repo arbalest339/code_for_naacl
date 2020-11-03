@@ -204,25 +204,11 @@ class TransD(Model):
         # negative_score = negative_score.view(-1, self.batch_size).permute(1, 0)
         return negative_score
 
-    def decode(self, emb_h, emb_t, batch_h, batch_t, batch_r, mask):
-        mode = "head_batch"
+    def encoder(self, batch_r):
         r = self.rel_embeddings(batch_r)
-        h_transfer = self.ent_transfer(batch_h)
-        t_transfer = self.ent_transfer(batch_t)
         r_transfer = self.rel_transfer(batch_r)
-        h = self._transfer(emb_h, h_transfer, r_transfer)   # 投影的过程
-        t = self._transfer(emb_t, t_transfer, r_transfer)
-        score = self._calc(h, t, r, mask, mode)
-        if self.margin_flag:
-            score = self.margin - score
-        p_score = self._get_positive_score(score, mask)
-        n_score = self._get_negative_score(score, mask)
-        if p_score.shape[0] > n_score.shape[0]:
-            n_score = torch.cat([n_score, n_score.mean().expand((p_score.shape[0] - n_score.shape[0],))], dim=0)
-        elif n_score.shape[0] > p_score.shape[0]:
-            p_score = torch.cat([p_score, p_score.mean().expand((n_score.shape[0] - p_score.shape[0],))], dim=0)
-        score = self.loss.predict(p_score, n_score)
-        return score
+
+        return r
 
 
 class Loss(BaseModule):
