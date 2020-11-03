@@ -39,7 +39,7 @@ def main():
     if torch.cuda.is_available():
         model.cuda()
     if FLAGS.is_continue:
-        model.load_state_dict(torch.load(FLAGS.checkpoint_path))
+        model.load_state_dict(torch.load(FLAGS.dp_checkpoint_path))
         print('Training from previous model.')
     print("Model initialized.")
 
@@ -61,45 +61,38 @@ def main():
     for epoch in range(FLAGS.epoch):
         model.train()
         losses = []
-        accs = []
         with tqdm(total=len(train_set)/FLAGS.batch_size, desc=f'Epoch {epoch+1}/{FLAGS.epoch}', unit='it') as pbar:
             for step, data in enumerate(trainset_loader):
                 token, pos, ner, arc, matrix, gold, mask, acc_mask = data
                 model.zero_grad()
-                loss, acc, zero_acc = model(token, pos, ner, arc, matrix, gold, mask, acc_mask)
+                loss = model(token, pos, ner, arc, matrix, gold, mask, acc_mask)
                 losses.append(loss.data.item())
-                accs.append(acc.data.item())
                 # backward
                 loss.backward()
                 optimizer.step()
                 # tqdm
-                pbar.set_postfix({'batch_loss': loss.data.item(), "acc": acc.data.item(), "zero": zero_acc.data.item()})   # 在进度条后显示当前batch的损失
+                pbar.set_postfix({'batch_loss': loss.data.item()})   # 在进度条后显示当前batch的损失
                 pbar.update(1)
         train_loss = np.mean(losses)
-        train_acc = np.mean(accs)
-        print(f"[{epoch + 1}/{FLAGS.epoch}] trainset mean_loss: {train_loss: 0.4f} trainset mean_acc: {train_acc: 0.4f}")
+        print(f"[{epoch + 1}/{FLAGS.epoch}] trainset mean_loss: {train_loss: 0.4f}")
 
         model.eval()
         losses = []
-        accs = []
         for step, data in enumerate(validset_loader):
             token, pos, ner, arc, matrix, gold, mask, acc_mask = data
             model.zero_grad()
-            loss, acc, zero_acc = model(token, pos, ner, arc, matrix, gold, mask, acc_mask)
+            loss = model(token, pos, ner, arc, matrix, gold, mask, acc_mask)
             losses.append(loss.data.item())
-            accs.append(acc.data.item())
         valid_loss = np.mean(losses)
-        valid_acc = np.mean(accs)
-        scheduler.step(valid_acc)
+        scheduler.step(valid_loss)
         # scheduler.step(epoch)
-        print(f"[{epoch + 1}/{FLAGS.epoch}] validset mean_loss: {valid_loss: 0.4f} valid mean_acc: {valid_acc: 0.4f}")
+        print(f"[{epoch + 1}/{FLAGS.epoch}] validset mean_loss: {valid_loss: 0.4f}")
 
         if valid_loss < best_loss:
             best_loss = valid_loss
             print('Saving model...  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
             torch.save(model.state_dict(), FLAGS.checkpoint_path)
-            if FLAGS.task == "dp_emb":
-                model.save_embedding()
+            model.save_embedding()
             print('Saving model finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
             patience = 6
         else:
