@@ -16,7 +16,7 @@ class Flags(object):
     def __init__(self):
         # task info
         self.language = "en"    # en, zh
-        self.task = "dp_emb"    # dp_emb, ore, oie
+        self.task = "ore"    # dp_emb, ore, oie
         self.model_type = "bert"   # cnn_lstm, bert
         self.is_continue = False
         self.is_test = False
@@ -33,6 +33,7 @@ class Flags(object):
 
         self.checkpoint_dir = os.path.join(curpath, "checkpoints")  # Path of model checkpoints
         self.checkpoint_path = os.path.join(self.checkpoint_dir, f"{self.task}_{self.language}.pkl")
+        self.dp_checkpoint_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}.pkl")
         self.dp_embedding_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}.npy")
 
         self.data_dir = os.path.join(curpath, f"{self.language}_data")  # Path of input data dir
@@ -48,7 +49,7 @@ class Flags(object):
         self.out_dir = os.path.join(curpath, "out")  # Path of output results dir
 
         # train hyper parameters
-        self.learning_rate = 3.e-3
+        self.learning_rate = 3.e-5
         self.epoch = 100
         self.batch_size = 16
         self.test_batch_size = 8
