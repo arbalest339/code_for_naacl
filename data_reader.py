@@ -71,10 +71,19 @@ class OIEDataset(data.Dataset):
                 token = ["[CLS]"] + token[:self.max_length] + ["[SEP]"]
                 pos = [0] + pos[:self.max_length] + [0]
                 ner = [0] + ner[:self.max_length] + [0]
-                gold = [0] + gold[:self.max_length] + [0]
-                arc = arc[:(self.max_length + 2)]
+                gold = ["O"] + gold[:self.max_length] + ["O"]
                 mask = [1] * (self.max_length + 2)
-                matrix = matrix[:self.max_length+2, :self.max_length+2]
+                if pad_length == -1:    # 127
+                    neg = arc[-1]
+                    while neg in arc:
+                        neg = [int(random.uniform(1, token_length+1)), int(random.uniform(0, len(FLAGS.dp_map))), int(random.uniform(1, token_length+1))]
+                    arc += [neg]
+                    for i, row in enumerate(matrix):
+                        matrix[i] = row + [0.0]
+                    matrix.append([0.0] * (self.max_length + 2))
+                else:
+                    arc = arc[:(self.max_length + 2)]
+                    matrix = [mr[:self.max_length+2] for mr in matrix[:self.max_length+2]]
 
             acc_mask = [1 if g != "O" else 0 for g in gold]
             acc_mask[0] = 1
@@ -147,9 +156,18 @@ class OIEDataset(data.Dataset):
                 token = ["[CLS]"] + token[:self.max_length] + ["[SEP]"]
                 pos = [0] + pos[:self.max_length] + [0]
                 ner = [0] + ner[:self.max_length] + [0]
-                arc = arc[:(self.max_length + 2)]
                 mask = [1] * (self.max_length + 2)
-                matrix = matrix[:self.max_length+2, :self.max_length+2]
+                if pad_length == -1:    # 127
+                    neg = arc[-1]
+                    while neg in arc:
+                        neg = [int(random.uniform(1, token_length+1)), int(random.uniform(0, len(FLAGS.dp_map))), int(random.uniform(1, token_length+1))]
+                    arc += [neg]
+                    for i, row in enumerate(matrix):
+                        matrix[i] = row + [0.0]
+                    matrix.append([0.0] * (self.max_length + 2))
+                else:
+                    arc = arc[:(self.max_length + 2)]
+                    matrix = [mr[:self.max_length+2] for mr in matrix[:self.max_length+2]]
 
             # 数字化
             token = tokenizer.convert_tokens_to_ids(token)
