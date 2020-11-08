@@ -7,6 +7,7 @@ Description: code and model configs
 FilePath: /entity_disambiguation/config.py
 '''
 import os
+import nni
 import json
 import torch
 import argparse
@@ -16,7 +17,7 @@ class Flags(object):
     def __init__(self):
         # task info
         self.language = "en"    # en, zh
-        self.task = "ore"    # dp_emb, ore, oie
+        self.task = "oie"    # dp_emb, ore, oie
         self.model_type = "bert"   # cnn_lstm, bert
         self.is_continue = False
         self.is_test = False
@@ -50,12 +51,13 @@ class Flags(object):
 
         # train hyper parameters
         self.learning_rate = 3.e-5
-        self.epoch = 100
+        self.epoch = 20
         self.batch_size = 16
         self.test_batch_size = 8
         self.max_length = 128
         self.dropout_rate = 0.5
-        self.patient = 10
+        self.weight_decay = 1.e-3
+        self.patient = 5
         self.use_cuda = True
 
         # TransD config
