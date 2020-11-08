@@ -43,7 +43,7 @@ class OIEDataset(data.Dataset):
             # padding
             token_length = len(token)
             pad_length = self.max_length - token_length
-            if pad_length > 0:
+            if pad_length >= 0:
                 # BERT special token
                 token = ["[CLS]"] + token + ["[SEP]"]
                 pos = [0] + pos + [0]
@@ -78,9 +78,7 @@ class OIEDataset(data.Dataset):
                     while neg in arc:
                         neg = [int(random.uniform(1, token_length+1)), int(random.uniform(0, len(FLAGS.dp_map))), int(random.uniform(1, token_length+1))]
                     arc += [neg]
-                    for i, row in enumerate(matrix):
-                        matrix[i] = row + [0.0]
-                    matrix.append([0.0] * (self.max_length + 2))
+                    # matrix.append([0.0] * (self.max_length + 2))
                 else:
                     arc = arc[:(self.max_length + 2)]
                     matrix = [mr[:self.max_length+2] for mr in matrix[:self.max_length+2]]
@@ -101,6 +99,11 @@ class OIEDataset(data.Dataset):
             mask = torch.BoolTensor(mask).cuda() if self.use_cuda else torch.BoolTensor(mask)
             acc_mask = torch.BoolTensor(acc_mask).cuda() if self.use_cuda else torch.BoolTensor(acc_mask)
             matrix = torch.Tensor(matrix).cuda() if self.use_cuda else torch.Tensor(matrix)
+
+            # single_exp = [token, pos, ner, arc, matrix, gold, mask, acc_mask]
+            # for p, d in enumerate(single_exp):
+            #     if len(d) != 128:
+            #         print(p, d.shape)
 
             self.data.append([token, pos, ner, arc, matrix, gold, mask, acc_mask])
 
@@ -162,9 +165,7 @@ class OIEDataset(data.Dataset):
                     while neg in arc:
                         neg = [int(random.uniform(1, token_length+1)), int(random.uniform(0, len(FLAGS.dp_map))), int(random.uniform(1, token_length+1))]
                     arc += [neg]
-                    for i, row in enumerate(matrix):
-                        matrix[i] = row + [0.0]
-                    matrix.append([0.0] * (self.max_length + 2))
+                    # matrix.append([0.0] * (self.max_length + 2))
                 else:
                     arc = arc[:(self.max_length + 2)]
                     matrix = [mr[:self.max_length+2] for mr in matrix[:self.max_length+2]]
