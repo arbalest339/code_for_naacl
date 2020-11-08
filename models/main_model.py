@@ -90,6 +90,8 @@ class SeqModel(nn.Module):
     def __init__(self, flags, bertconfig, gcnopt):
         super(SeqModel, self).__init__()
         self.label_num = len(flags.label_map)
+        self.pos_num = len(flags.pos_map)
+        self.ner_num = len(flags.ner_map)
         self.dp_path = flags.dp_embedding_path
         self.mid_dim = 300
         bertconfig.num_labels = self.label_num
@@ -103,15 +105,19 @@ class SeqModel(nn.Module):
         # Pre-trained BERT model
         self.bert = BertForTokenClassification(bertconfig)
         # Dropout to avoid overfitting
-        self.dropout = nn.Dropout(flags.dropout_rate)
+        self.dropout1 = nn.Dropout(flags.dropout_rate)
+        self.dropout2 = nn.Dropout(flags.dropout_rate)
 
         # transd
         dp_emb = np.load(self.dp_path)
         self.transd = nn.Embedding.from_pretrained(torch.from_numpy(dp_emb))
 
+        self.pos_emb = nn.Embedding(self.pos_num, 50)
+        self.ner_emb = nn.Embedding(self.ner_num, 50)
+
         # full connection layers
         self.bert2mid = nn.Linear(bertconfig.hidden_size, self.mid_dim)
-        self.final2tag = nn.Linear(self.mid_dim * 2 + flags.dp_dim, self.label_num)
+        self.final2tag = nn.Linear(self.mid_dim * 2 + flags.dp_dim + 100, self.label_num)
 
         # CRF layer
         self.crf_layer = CRF(self.label_num, batch_first=True)
@@ -124,18 +130,21 @@ class SeqModel(nn.Module):
         batch_h = token_flatten[batch_h].reshape(token.shape)
 
         bert_hidden_t = self.bert(token, labels=gold, attention_mask=mask).hidden_states[-1]
-        bert_hidden_t = self.bert2mid(bert_hidden_t)
         bert_hidden_h = self.bert(batch_h, labels=gold, attention_mask=mask).hidden_states[-1]
+        bert_hidden_t = self.bert2mid(bert_hidden_t)
         bert_hidden_h = self.bert2mid(bert_hidden_h)
-        # bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
+        bert_hidden_t = self.dropout1(bert_hidden_t)     # batch_size, max_length, bert_hidden
+        bert_hidden_h = self.dropout2(bert_hidden_h)
 
         # fc layer
         # TransD
         batch_r = arc[:, :, 1]
         dp_emb = self.transd(batch_r)
+        pos_emb = self.pos_emb(pos)
+        ner_emb = self.ner_emb(ner)
 
         # feature concat
-        logits = torch.cat([bert_hidden_t, dp_emb, bert_hidden_h], dim=-1)
+        logits = torch.cat([bert_hidden_t, dp_emb, bert_hidden_h, pos_emb, ner_emb], dim=-1)
         logits = self.final2tag(logits)
 
         # crf loss
@@ -161,18 +170,23 @@ class SeqModel(nn.Module):
         token_flatten = token.view(-1)
         batch_h = arc[:, :, 0].view(-1)
         batch_h = token_flatten[batch_h].reshape(token.shape)
+
         bert_hidden_t = self.bert(token, attention_mask=mask).hidden_states[-1]
-        bert_hidden_t = self.bert2mid(bert_hidden_t)
         bert_hidden_h = self.bert(batch_h, attention_mask=mask).hidden_states[-1]
+        bert_hidden_t = self.bert2mid(bert_hidden_t)
         bert_hidden_h = self.bert2mid(bert_hidden_h)
+        bert_hidden_t = self.dropout1(bert_hidden_t)     # batch_size, max_length, bert_hidden
+        bert_hidden_h = self.dropout2(bert_hidden_h)
 
         # fc layer
         # TransD
         batch_r = arc[:, :, 1]
         dp_emb = self.transd(batch_r)
+        pos_emb = self.pos_emb(pos)
+        ner_emb = self.ner_emb(ner)
 
         # feature concat
-        logits = torch.cat([bert_hidden_t, dp_emb, bert_hidden_h], dim=-1)
+        logits = torch.cat([bert_hidden_t, dp_emb, bert_hidden_h, pos_emb, ner_emb], dim=-1)
         logits = self.final2tag(logits)
 
         # crf decode
