@@ -11,38 +11,35 @@ from torch import mode
 from transformers import BertTokenizer, BertConfig
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR
 from tqdm import tqdm
-from models.main_model import TransModel
-# from models.main_model import SeqModel
-from models.simple_model import SeqModel
+from models.main_model import SeqModel
+# from models.simple_model import SeqModel
 from models.cnn_lstm_model import CnnLSTM
 from data_reader import OIEDataset
 from config import FLAGS, aggcnargs
 
 
 def select_model(flags, bertconfig, aggcnargs):
-    if FLAGS.task == "dp_emb":
-        model = TransModel(flags, bertconfig, aggcnargs)
+    if FLAGS.model_type == "bert":
+        model = SeqModel(flags, bertconfig, aggcnargs)
+    elif FLAGS.model_type == "cnn_lstm":
+        model = CnnLSTM(flags, bertconfig, aggcnargs)
     else:
-        if FLAGS.model_type == "bert":
-            model = SeqModel(flags, bertconfig, aggcnargs)
-        elif FLAGS.model_type == "cnn_lstm":
-            model = CnnLSTM(flags, bertconfig, aggcnargs)
+        raise "Invalid model"
 
     return model
 
 
 def select_optim(flags, model):
-    if FLAGS.task == "dp_emb":
-        optimizer = torch.optim.Adadelta(model.parameters(), lr=FLAGS.learning_rate)
+    if FLAGS.model_type == "bert":
+        # optimizer = torch.optim.Adadelta([{"params": model.aggcn.parameters(), "lr": aggcnargs.lr},
+        #                                   {"params": model.bert.parameters()},
+        #                                   {"params": model.transd.parameters()},
+        #                                   {"params": model.crf_layer.parameters()}], lr=FLAGS.learning_rate)
+        optimizer = torch.optim.Adam(model.parameters(), lr=FLAGS.learning_rate, weight_decay=FLAGS.weight_decay)
+    elif FLAGS.model_type == "cnn_lstm":
+        optimizer = torch.optim.Adam(model.parameters(), lr=FLAGS.learning_rate)
     else:
-        if FLAGS.model_type == "bert":
-            # optimizer = torch.optim.Adadelta([{"params": model.aggcn.parameters(), "lr": aggcnargs.lr},
-            #                                   {"params": model.bert.parameters()},
-            #                                   {"params": model.transd.parameters()},
-            #                                   {"params": model.crf_layer.parameters()}], lr=FLAGS.learning_rate)
-            optimizer = torch.optim.Adadelta(model.parameters(), lr=FLAGS.learning_rate)
-        elif FLAGS.model_type == "cnn_lstm":
-            optimizer = torch.optim.Adadelta(model.parameters(), lr=FLAGS.learning_rate)
+        raise "Invalid model"
 
     return optimizer
 
@@ -71,7 +68,7 @@ def main():
     validset_loader = torch.utils.data.DataLoader(dev_set, FLAGS.test_batch_size, shuffle=False, num_workers=0, drop_last=True)
 
     optimizer = select_optim(FLAGS, model)
-    scheduler = ReduceLROnPlateau(optimizer, 'min', verbose=1, patience=3, factor=0.5, min_lr=1.e-8)
+    scheduler = ReduceLROnPlateau(optimizer, 'min', verbose=1, patience=2, factor=0.5, min_lr=1.e-8)
     # scheduler = CosineAnnealingLR(optimizer, T_max=(FLAGS.epoch // 9) + 1)
     best_acc = 0.0
     patience = FLAGS.patient
@@ -109,7 +106,7 @@ def main():
             accs.append(acc.data.item())
         valid_loss = np.mean(losses)
         valid_acc = np.mean(accs)
-        scheduler.step(valid_acc)
+        scheduler.step(valid_loss)
         # scheduler.step(epoch)
         print(f"[{epoch + 1}/{FLAGS.epoch}] validset mean_loss: {valid_loss: 0.4f} valid mean_acc: {valid_acc: 0.4f}")
 
@@ -117,8 +114,6 @@ def main():
             best_acc = valid_acc
             print('Saving model...  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
             torch.save(model.state_dict(), FLAGS.checkpoint_path)
-            if FLAGS.task == "dp_emb":
-                model.save_embedding()
             print('Saving model finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
             patience = FLAGS.patient
         else:
@@ -126,6 +121,9 @@ def main():
 
         if patience == 0:
             break
+        # print('Saving model...  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+        # torch.save(model.state_dict(), FLAGS.checkpoint_path)
+        # print('Saving model finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
     print('Training finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
 
