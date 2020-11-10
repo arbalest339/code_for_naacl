@@ -99,8 +99,8 @@ class SeqModel(nn.Module):
         bertconfig.output_hidden_states = True
         self.dp_path = flags.dp_embedding_path
 
-        self.act = nn.Sigmoid()
-        self.bn = nn.BatchNorm1d(flags.max_length)
+        self.bn1 = nn.BatchNorm1d(flags.max_length)
+        self.bn2 = nn.BatchNorm1d(flags.max_length)
 
         # Pre-trained BERT model
         self.bert = BertForTokenClassification(bertconfig)
@@ -115,9 +115,13 @@ class SeqModel(nn.Module):
         self.pos_emb = nn.Embedding(self.pos_num, 50)
         self.ner_emb = nn.Embedding(self.ner_num, 50)
 
+        # lstm
+        self.lstm = nn.LSTM(self.mid_dim * 2 + flags.dp_dim + 100, flags.lstm_hidden, flags.n_layers, batch_first=True, bidirectional=True)
+        self.dropout3 = nn.Dropout(flags.dropout_rate)
+
         # full connection layers
         self.bert2mid = nn.Linear(bertconfig.hidden_size, self.mid_dim)
-        self.final2tag = nn.Linear(self.mid_dim * 2 + flags.dp_dim + 100, self.label_num)
+        self.final2tag = nn.Linear(flags.lstm_hidden * 2, self.label_num)
 
         # CRF layer
         self.crf_layer = CRF(self.label_num, batch_first=True)
@@ -131,6 +135,8 @@ class SeqModel(nn.Module):
 
         bert_hidden_t = self.bert(token, labels=gold, attention_mask=mask).hidden_states[-1]
         bert_hidden_h = self.bert(batch_h, labels=gold, attention_mask=mask).hidden_states[-1]
+        bert_hidden_t = self.bn1(bert_hidden_t)
+        bert_hidden_h = self.bn2(bert_hidden_h)
         bert_hidden_t = self.bert2mid(bert_hidden_t)
         bert_hidden_h = self.bert2mid(bert_hidden_h)
         bert_hidden_t = self.dropout1(bert_hidden_t)     # batch_size, max_length, bert_hidden
@@ -144,8 +150,12 @@ class SeqModel(nn.Module):
         ner_emb = self.ner_emb(ner)
 
         # feature concat
-        logits = torch.cat([bert_hidden_t, dp_emb, bert_hidden_h, pos_emb, ner_emb], dim=-1)
-        logits = self.final2tag(logits)
+        final = torch.cat([bert_hidden_t, dp_emb, bert_hidden_h, pos_emb, ner_emb], dim=-1)
+
+        # lstm
+        final, _ = self.lstm(final)
+        final = self.dropout3(final)
+        logits = self.final2tag(final)
 
         # crf loss
         loss = - self.crf_layer(logits, gold, mask=mask, reduction="mean")
@@ -173,6 +183,8 @@ class SeqModel(nn.Module):
 
         bert_hidden_t = self.bert(token, attention_mask=mask).hidden_states[-1]
         bert_hidden_h = self.bert(batch_h, attention_mask=mask).hidden_states[-1]
+        bert_hidden_t = self.bn1(bert_hidden_t)
+        bert_hidden_h = self.bn2(bert_hidden_h)
         bert_hidden_t = self.bert2mid(bert_hidden_t)
         bert_hidden_h = self.bert2mid(bert_hidden_h)
         bert_hidden_t = self.dropout1(bert_hidden_t)     # batch_size, max_length, bert_hidden
@@ -186,8 +198,12 @@ class SeqModel(nn.Module):
         ner_emb = self.ner_emb(ner)
 
         # feature concat
-        logits = torch.cat([bert_hidden_t, dp_emb, bert_hidden_h, pos_emb, ner_emb], dim=-1)
-        logits = self.final2tag(logits)
+        final = torch.cat([bert_hidden_t, dp_emb, bert_hidden_h, pos_emb, ner_emb], dim=-1)
+
+        # lstm
+        final, _ = self.lstm(final)
+        final = self.dropout3(final)
+        logits = self.final2tag(final)
 
         # crf decode
         tag_seq = self.crf_layer.decode(logits, mask=mask)[0]
