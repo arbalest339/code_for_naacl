@@ -133,7 +133,7 @@ class OIEDataset(data.Dataset):
             # padding
             token_length = len(token)
             pad_length = self.max_length - token_length
-            if pad_length > 0:
+            if pad_length >= 0:
                 # BERT special token
                 token = ["[CLS]"] + token + ["[SEP]"]
                 pos = [0] + pos + [0]
@@ -169,6 +169,12 @@ class OIEDataset(data.Dataset):
                 else:
                     arc = arc[:(self.max_length + 2)]
                     matrix = [mr[:self.max_length+2] for mr in matrix[:self.max_length+2]]
+                while len(e1) > 0 and e1[-1] + 1 >= self.max_length - 1:
+                    e1.pop()
+                while len(e2) > 0 and e2[-1] + 1 >= self.max_length - 1:
+                    e2.pop()
+                while len(r) > 0 and r[-1] + 1 >= self.max_length - 1:
+                    r.pop()
 
             # 数字化
             token = tokenizer.convert_tokens_to_ids(token)
