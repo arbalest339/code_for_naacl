@@ -14,6 +14,7 @@ from tqdm import tqdm
 from models.main_model import SeqModel
 # from models.simple_model import SeqModel
 from models.cnn_lstm_model import CnnLSTM
+from test import en_metrics, zh_metrics
 from data_reader import OIEDataset
 from config import FLAGS, aggcnargs
 
@@ -44,6 +45,38 @@ def select_optim(flags, model):
     return optimizer
 
 
+def test(model, test_set):
+    print("Start testing", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+
+    positive_true = 0
+    positive_false = 0
+    negative_false = 0
+    model.eval()
+    for token, pos, ner, arc, matrix, e1, e2, r, mask in test_set.data:
+        model.zero_grad()
+        token = token.unsqueeze(dim=0)
+        pos = pos.unsqueeze(dim=0)
+        ner = ner.unsqueeze(dim=0)
+        arc = arc.unsqueeze(dim=0)
+        matrix = matrix.unsqueeze(dim=0)
+        mask = mask.unsqueeze(dim=0)
+        tag_seq = model.decode(token, pos, ner, arc, matrix, mask)[0]
+        # tag_seq = tag_seq.cpu().detach().numpy().tolist()
+
+        pt, pf, nf = en_metrics(e1, e2, r, tag_seq) if FLAGS.language == "en" else zh_metrics(e1, e2, r, tag_seq)
+        positive_true += pt
+        positive_false += pf
+        negative_false += nf
+
+    precision = positive_true / (positive_false + positive_true)
+    recall = positive_true / (positive_true + negative_false)
+    f1 = 2 * precision * recall / (precision + recall)
+
+    print(f"Precision: {precision: .3f}, Recall: {recall: .3f}, F1: {f1: .3f}")
+    print('Testing finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+    return f1
+
+
 def main():
     # load from pretrained config file
     bertconfig = json.load(open(FLAGS.pretrained_config))
@@ -64,12 +97,13 @@ def main():
     tokenizer = BertTokenizer.from_pretrained(FLAGS.pretrained_vocab)
     train_set = OIEDataset(FLAGS.train_path, FLAGS.train_mat, tokenizer, FLAGS.max_length, mode="train")
     dev_set = OIEDataset(FLAGS.dev_path, FLAGS.dev_mat, tokenizer, FLAGS.max_length, mode="train")
-    trainset_loader = torch.utils.data.DataLoader(train_set, FLAGS.batch_size, shuffle=False, num_workers=0, drop_last=True)
-    validset_loader = torch.utils.data.DataLoader(dev_set, FLAGS.test_batch_size, shuffle=False, num_workers=0, drop_last=True)
+    trainset_loader = torch.utils.data.DataLoader(train_set, FLAGS.batch_size, num_workers=0, drop_last=True)
+    validset_loader = torch.utils.data.DataLoader(dev_set, FLAGS.test_batch_size, num_workers=0, drop_last=True)
 
     optimizer = select_optim(FLAGS, model)
     scheduler = ReduceLROnPlateau(optimizer, 'min', verbose=1, patience=2, factor=0.5, min_lr=1.e-8)
     # scheduler = CosineAnnealingLR(optimizer, T_max=(FLAGS.epoch // 9) + 1)
+    # best_loss = 100
     best_acc = 0.0
     patience = FLAGS.patient
 
@@ -100,8 +134,8 @@ def main():
         accs = []
         for step, data in enumerate(validset_loader):
             token, pos, ner, arc, matrix, gold, mask, acc_mask = data
-            model.zero_grad()
-            loss, acc, zero_acc = model(token, pos, ner, arc, matrix, gold, mask, acc_mask)
+            with torch.no_grad():
+                loss, acc, zero_acc = model(token, pos, ner, arc, matrix, gold, mask, acc_mask)
             losses.append(loss.data.item())
             accs.append(acc.data.item())
         valid_loss = np.mean(losses)
