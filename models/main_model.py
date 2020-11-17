@@ -7,7 +7,7 @@ Description: model defination
 FilePath: /code_for_naacl/models/main_model.py
 '''
 import torch
-from torch import embedding, log_softmax, softmax, zeros
+from torch import embedding, log_softmax, sigmoid, softmax, zeros
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -32,7 +32,7 @@ class TransModel(nn.Module):
         self.dp_save_path = flags.dp_embedding_path
 
         # Pre-trained BERT model
-        self.bert = BertModel(bertconfig)
+        self.bert = BertModel.from_pretrained(flags.pretrained, config=bertconfig)
         # Dropout to avoid overfitting
         self.dropout = nn.Dropout(flags.dropout_rate)
 
@@ -103,7 +103,7 @@ class SeqModel(nn.Module):
         self.bn2 = nn.BatchNorm1d(flags.max_length)
 
         # Pre-trained BERT model
-        self.bert = BertForTokenClassification(bertconfig)
+        self.bert = BertForTokenClassification.from_pretrained(flags.pretrained, config=bertconfig)
         # Dropout to avoid overfitting
         self.dropout1 = nn.Dropout(flags.dropout_rate)
         self.dropout2 = nn.Dropout(flags.dropout_rate)
@@ -111,6 +111,7 @@ class SeqModel(nn.Module):
         # transd
         dp_emb = np.load(self.dp_path)
         self.transd = nn.Embedding.from_pretrained(torch.from_numpy(dp_emb))
+        # self.transd = nn.Embedding(dp_emb.shape[0], dp_emb.shape[1])
 
         self.pos_emb = nn.Embedding(self.pos_num, 50)
         self.ner_emb = nn.Embedding(self.ner_num, 50)
@@ -170,13 +171,6 @@ class SeqModel(nn.Module):
         return loss, acc, zero_acc
 
     def decode(self, token, pos, ner, arc, matrix, mask):
-        token = token.unsqueeze(dim=0)
-        pos = pos.unsqueeze(dim=0)
-        ner = ner.unsqueeze(dim=0)
-        arc = arc.unsqueeze(dim=0)
-        matrix = matrix.unsqueeze(dim=0)
-        mask = mask.unsqueeze(dim=0)
-
         token_flatten = token.view(-1)
         batch_h = arc[:, :, 0].view(-1)
         batch_h = token_flatten[batch_h].reshape(token.shape)
@@ -206,7 +200,7 @@ class SeqModel(nn.Module):
         logits = self.final2tag(final)
 
         # crf decode
-        tag_seq = self.crf_layer.decode(logits, mask=mask)[0]
+        tag_seq = self.crf_layer.decode(logits, mask=mask)
         # tag_seq = torch.max(log_softmax(logits[mask.bool()], dim=-1), dim=-1).indices
         # tag_seq = tag_seq.cpu().detach().numpy().tolist()
         return tag_seq

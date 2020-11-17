@@ -26,11 +26,15 @@ class Flags(object):
         # data dirs
         curpath = os.path.abspath(os.path.dirname(__file__))
 
-        self.pretrained_dir = os.path.join(curpath, f"pretrained/{self.language}_model")    # Path of pretrained ML model
-        self.pretrained_config = os.path.join(self.pretrained_dir, "config.json")
-        self.pretrained_model = os.path.join(self.pretrained_dir, "pytorch_model.bin")
-        self.pretrained_vocab = os.path.join(self.pretrained_dir, "vocab.txt")
-        self.embedding_path = self.pretrained_dir = os.path.join(curpath, f"pretrained/wiki.{self.language}.align.vec")
+        # self.pretrained_dir = os.path.join(curpath, f"pretrained/{self.language}_model")    # Path of pretrained ML model
+        # self.pretrained_config = os.path.join(self.pretrained_dir, "config.json")
+        # self.pretrained_model = os.path.join(self.pretrained_dir, "pytorch_model.bin")
+        # self.pretrained_vocab = os.path.join(self.pretrained_dir, "vocab.txt")
+        if self.language == "zh":
+            self.pretrained = "bert-base-chinese"
+        else:
+            self.pretrained = "bert-base-uncased"
+        self.embedding_path = os.path.join(curpath, f"pretrained/wiki.{self.language}.align.vec")
 
         self.checkpoint_dir = os.path.join(curpath, "checkpoints")  # Path of model checkpoints
         self.checkpoint_path = os.path.join(self.checkpoint_dir, f"{self.task}_{self.language}.pkl")

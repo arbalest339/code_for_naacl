@@ -63,7 +63,7 @@ def test(model, test_set):
         tag_seq = model.decode(token, pos, ner, arc, matrix, mask)[0]
         # tag_seq = tag_seq.cpu().detach().numpy().tolist()
 
-        pt, pf, nf = en_metrics(e1, e2, r, tag_seq) if FLAGS.language == "en" else zh_metrics(e1, e2, r, tag_seq)
+        pt, pf, nf = zh_metrics(e1, e2, r, tag_seq)
         positive_true += pt
         positive_false += pf
         negative_false += nf
@@ -72,15 +72,15 @@ def test(model, test_set):
     recall = positive_true / (positive_true + negative_false)
     f1 = 2 * precision * recall / (precision + recall)
 
-    print(f"Precision: {precision: .3f}, Recall: {recall: .3f}, F1: {f1: .3f}")
+    print(f"Precision: {precision: .4f}, Recall: {recall: .4f}, F1: {f1: .4f}")
     print('Testing finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
     return f1
 
 
 def main():
     # load from pretrained config file
-    bertconfig = json.load(open(FLAGS.pretrained_config))
-    bertconfig = BertConfig(**bertconfig)
+    # bertconfig = json.load(open(FLAGS.pretrained_config))
+    bertconfig = BertConfig.from_pretrained(FLAGS.pretrained)
 
     # Initiate model
     print("Initiating model.")
@@ -94,9 +94,10 @@ def main():
 
     # load data
     print("Loading traning and valid data")
-    tokenizer = BertTokenizer.from_pretrained(FLAGS.pretrained_vocab)
+    tokenizer = BertTokenizer.from_pretrained(FLAGS.pretrained)
     train_set = OIEDataset(FLAGS.train_path, FLAGS.train_mat, tokenizer, FLAGS.max_length, mode="train")
     dev_set = OIEDataset(FLAGS.dev_path, FLAGS.dev_mat, tokenizer, FLAGS.max_length, mode="train")
+    test_set = OIEDataset(FLAGS.test_path, FLAGS.test_mat, tokenizer, FLAGS.max_length, mode="test")
     trainset_loader = torch.utils.data.DataLoader(train_set, FLAGS.batch_size, num_workers=0, drop_last=True)
     validset_loader = torch.utils.data.DataLoader(dev_set, FLAGS.test_batch_size, num_workers=0, drop_last=True)
 
@@ -144,8 +145,9 @@ def main():
         # scheduler.step(epoch)
         print(f"[{epoch + 1}/{FLAGS.epoch}] validset mean_loss: {valid_loss: 0.4f} valid mean_acc: {valid_acc: 0.4f}")
 
-        if valid_acc > best_acc:
-            best_acc = valid_acc
+        f1 = test(model, test_set)
+        if f1 > best_acc:
+            best_acc = f1
             print('Saving model...  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
             torch.save(model.state_dict(), FLAGS.checkpoint_path)
             print('Saving model finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))

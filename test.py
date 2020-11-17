@@ -9,8 +9,8 @@ import torch
 import numpy as np
 
 from transformers import BertTokenizer, BertConfig
-# from models.main_model import SeqModel
-from models.simple_model import SeqModel
+from models.main_model import SeqModel
+# from models.simple_model import SeqModel
 from data_reader import OIEDataset
 from config import FLAGS, aggcnargs
 
@@ -83,7 +83,7 @@ def zh_metrics(e1, e2, r, tag_seq):
     return positive_true, positive_false, negative_false
 
 
-def main():
+def test():
     # load from pretrained config file
     bertconfig = json.load(open(FLAGS.pretrained_config))
     bertconfig = BertConfig(**bertconfig)
@@ -102,7 +102,8 @@ def main():
     print("Loading traning and valid data")
     tokenizer = BertTokenizer.from_pretrained(FLAGS.pretrained_vocab)
     test_set = OIEDataset(FLAGS.test_path, FLAGS.test_mat, tokenizer, FLAGS.max_length, mode="test")
-
+    wf = open("out/auto", "a")
+    wf.write("Start testing " + str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))) + "\n")
     print("Start testing", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
     positive_true = 0
@@ -111,10 +112,16 @@ def main():
     model.eval()
     for token, pos, ner, arc, matrix, e1, e2, r, mask in test_set.data:
         model.zero_grad()
-        tag_seq = model.decode(token, pos, ner, arc, matrix, mask)
+        token = token.unsqueeze(dim=0)
+        pos = pos.unsqueeze(dim=0)
+        ner = ner.unsqueeze(dim=0)
+        arc = arc.unsqueeze(dim=0)
+        matrix = matrix.unsqueeze(dim=0)
+        mask = mask.unsqueeze(dim=0)
+        tag_seq = model.decode(token, pos, ner, arc, matrix, mask)[0]
         # tag_seq = tag_seq.cpu().detach().numpy().tolist()
-
-        pt, pf, nf = en_metrics(e1, e2, r, tag_seq) if FLAGS.language == "en" else zh_metrics(e1, e2, r, tag_seq)
+        # en_metrics(e1, e2, r, tag_seq) if FLAGS.language == "en" else
+        pt, pf, nf = zh_metrics(e1, e2, r, tag_seq)
         positive_true += pt
         positive_false += pf
         negative_false += nf
@@ -123,9 +130,13 @@ def main():
     recall = positive_true / (positive_true + negative_false)
     f1 = 2 * precision * recall / (precision + recall)
 
-    print(f"Precision: {precision: .3f}, Recall: {recall: .3f}, F1: {f1: .3f}")
+    print(f"Precision: {precision: .4f}, Recall: {recall: .4f}, F1: {f1: .4f}")
+    wf.write(f"Precision: {precision: .4f}, Recall: {recall: .4f}, F1: {f1: .4f}\n")
     print('Testing finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+    wf.write("Testing finished " + str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))) + "\n")
+    wf.close()
+    return f1
 
 
 if __name__ == "__main__":
-    main()
+    test()
