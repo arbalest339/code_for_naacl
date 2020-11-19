@@ -24,70 +24,70 @@ class SeqModel(nn.Module):
         self.act = nn.Sigmoid()
         self.bn = nn.BatchNorm1d(flags.max_length)
 
-        # Pre-trained BERT model
-        self.bert = BertForTokenClassification(bertconfig)
+        self.bert = BertForTokenClassification.from_pretrained(flags.pretrained, config=bertconfig)
+        self.bn = nn.BatchNorm1d(flags.max_length)
         # Dropout to avoid overfitting
         self.dropout = nn.Dropout(flags.dropout_rate)
 
-        # transd
-        dp_emb = np.load(self.dp_path)
-        self.transd = nn.Embedding.from_pretrained(torch.from_numpy(dp_emb))
+        # aggcn
+        self.bert2gcn = nn.Linear(bertconfig.hidden_size, gcnopt.emb_dim)
+        self.aggcn = AGGCN(gcnopt, flags)
 
         # full connection layers
-        self.bert2tag = nn.Linear(bertconfig.hidden_size + flags.dp_dim, self.label_num)
+        self.gcn2tag = nn.Linear(gcnopt.emb_dim, self.label_num)
 
         # CRF layer
         self.crf_layer = CRF(self.label_num, batch_first=True)
         self.loss = nn.CrossEntropyLoss()
 
-    def forward(self, token, pos, ner, arc, matrix, gold, mask, acc_mask):
+    def forward(self, token, pos, ner, dp, head, matrix, gold, mask, acc_mask):
         # BERT's last hidden layer
         bert_hidden = self.bert(token, labels=gold, attention_mask=mask).hidden_states[-1]
-        # bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
+        bert_hidden = self.bn(bert_hidden)
+        bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
+
+        gcn_input = self.bert2gcn(bert_hidden)
+        gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
 
         # fc layer
         # TransD
-        batch_r = arc[:, :, 1]
-        dp_emb = self.transd(batch_r)
+        # batch_r = arc[:, :, 1]
+        # dp_emb = self.transd(batch_r)
 
         # feature concat
-        logits = torch.cat([bert_hidden, dp_emb], dim=-1)
-        logits = self.bert2tag(logits)
+        # logits = torch.cat([bert_hidden, dp_emb], dim=-1)
+        logits = self.gcn2tag(gcn_hidden)
 
         # crf loss
-        loss = - self.crf_layer(logits, gold, mask=mask)
+        loss = - self.crf_layer(logits, gold, mask=mask, reduction="mean")
         # crf_loss = self.loss(logits.view(-1, self.label_num), gold.view(-1))
         pred = torch.Tensor(self.crf_layer.decode(logits)).cuda()
         # pred = torch.max(log_softmax(logits, dim=-1), dim=-1).indices
         zero = torch.zeros(*gold.shape, dtype=gold.dtype).cuda()
         eq = torch.eq(pred, gold.float())
-        acc = torch.sum(eq * mask.float()) / torch.sum(mask.float())
+        acc = torch.sum(eq * acc_mask.float()) / torch.sum(acc_mask.float())
         zero_acc = torch.sum(torch.eq(zero, gold.float()) * mask.float()) / torch.sum(mask.float())
 
         return loss, acc, zero_acc
 
-    def decode(self, token, pos, ner, arc, matrix, mask):
-        token = token.unsqueeze(dim=0)
-        pos = pos.unsqueeze(dim=0)
-        ner = ner.unsqueeze(dim=0)
-        arc = arc.unsqueeze(dim=0)
-        matrix = matrix.unsqueeze(dim=0)
-        mask = mask.unsqueeze(dim=0)
-
+    def decode(self, token, pos, ner, dp, head, matrix, mask):
         bert_hidden = self.bert(token, attention_mask=mask).hidden_states[-1]
-        # bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
+        bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
+
+        gcn_input = self.bert2gcn(bert_hidden)
+        gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
 
         # fc layer
         # TransD
-        batch_r = arc[:, :, 1]
-        dp_emb = self.transd(batch_r)
+        # batch_r = arc[:, :, 1]
+        # dp_emb = self.transd(batch_r)
 
         # feature concat
-        logits = torch.cat([bert_hidden, dp_emb], dim=-1)
-        logits = self.bert2tag(logits)
+        # logits = torch.cat([bert_hidden, dp_emb], dim=-1)
+        logits = self.gcn2tag(gcn_hidden)
 
         # crf decode
-        tag_seq = self.crf_layer.decode(logits, mask=mask)[0]
+        tag_seq = self.crf_layer.decode(logits, mask=mask)
         # tag_seq = torch.max(log_softmax(logits[mask.bool()], dim=-1), dim=-1).indices
         # tag_seq = tag_seq.cpu().detach().numpy().tolist()
         return tag_seq
