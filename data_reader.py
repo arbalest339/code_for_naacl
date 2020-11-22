@@ -39,6 +39,8 @@ class OIEDataset(data.Dataset):
                     else:
                         matrix[i][j] = 0.0
             arc.sort(key=lambda x: x[2])
+            dp = [t[1] for t in arc]
+            head = [token[t[0]-1] if t[0] != 0 else "[CLS]" for t in arc]
 
             # padding
             token_length = len(token)
@@ -56,10 +58,8 @@ class OIEDataset(data.Dataset):
                 gold += ["O"] * pad_length
                 # dp arcs pad
                 for p in range(pad_length + 2):     # 为arc pad的是随机产生的负样本
-                    neg = arc[-1]
-                    while neg in arc:
-                        neg = [int(random.uniform(1, token_length+1)), int(random.uniform(0, len(FLAGS.dp_map))), int(random.uniform(1, token_length+1))]
-                    arc += [neg]
+                    dp += [0]
+                    head += ["[PAD]"]
                 # mask pad
                 mask = [1] * (token_length + 2) + [0] * pad_length
                 # matrix pad
@@ -74,13 +74,11 @@ class OIEDataset(data.Dataset):
                 gold = ["O"] + gold[:self.max_length] + ["O"]
                 mask = [1] * (self.max_length + 2)
                 if pad_length == -1:    # 127
-                    neg = arc[-1]
-                    while neg in arc:
-                        neg = [int(random.uniform(1, token_length+1)), int(random.uniform(0, len(FLAGS.dp_map))), int(random.uniform(1, token_length+1))]
-                    arc += [neg]
-                    # matrix.append([0.0] * (self.max_length + 2))
+                    dp += [0]
+                    head += ["[PAD]"]
                 else:
-                    arc = arc[:(self.max_length + 2)]
+                    dp = dp[:(self.max_length + 2)]
+                    head = head[:(self.max_length + 2)]
                     matrix = [mr[:self.max_length+2] for mr in matrix[:self.max_length+2]]
 
             acc_mask = [1 if g != "O" else 0 for g in gold]
@@ -88,6 +86,7 @@ class OIEDataset(data.Dataset):
 
             # 数字化
             token = tokenizer.convert_tokens_to_ids(token)
+            head = tokenizer.convert_tokens_to_ids(head)
             gold = [self.label_map[g] for g in gold]
 
             # tensor化
@@ -95,17 +94,13 @@ class OIEDataset(data.Dataset):
             pos = torch.LongTensor(pos).cuda() if self.use_cuda else torch.LongTensor(pos)
             ner = torch.LongTensor(ner).cuda() if self.use_cuda else torch.LongTensor(ner)
             gold = torch.LongTensor(gold).cuda() if self.use_cuda else torch.LongTensor(gold)
-            arc = torch.LongTensor(arc).cuda() if self.use_cuda else torch.LongTensor(arc)
+            dp = torch.LongTensor(dp).cuda() if self.use_cuda else torch.LongTensor(dp)
+            head = torch.LongTensor(head).cuda() if self.use_cuda else torch.LongTensor(head)
             mask = torch.BoolTensor(mask).cuda() if self.use_cuda else torch.BoolTensor(mask)
             acc_mask = torch.BoolTensor(acc_mask).cuda() if self.use_cuda else torch.BoolTensor(acc_mask)
             matrix = torch.Tensor(matrix).cuda() if self.use_cuda else torch.Tensor(matrix)
 
-            # single_exp = [token, pos, ner, arc, matrix, gold, mask, acc_mask]
-            # for p, d in enumerate(single_exp):
-            #     if len(d) != 128:
-            #         print(p, d.shape)
-
-            self.data.append([token, pos, ner, arc, matrix, gold, mask, acc_mask])
+            self.data.append([token, pos, ner, dp, head, matrix, gold, mask, acc_mask])
 
     def load_test(self, data_path, matrix_path, tokenizer):
         self.data = list()
@@ -129,6 +124,9 @@ class OIEDataset(data.Dataset):
                         matrix[i][j] = 1.0
                     else:
                         matrix[i][j] = 0.0
+            arc.sort(key=lambda x: x[2])
+            dp = [t[1] for t in arc]
+            head = [token[t[0]-1] if t[0] != 0 else "[CLS]" for t in arc]
 
             # padding
             token_length = len(token)
@@ -144,10 +142,8 @@ class OIEDataset(data.Dataset):
                 ner += [0] * pad_length
                 # dp arcs pad
                 for p in range(pad_length + 2):     # 为arc pad的是随机产生的负样本
-                    neg = arc[-1]
-                    while neg in arc:
-                        neg = [int(random.uniform(1, token_length+1)), int(random.uniform(0, len(FLAGS.dp_map))), int(random.uniform(1, token_length+1))]
-                    arc += [neg]
+                    dp += [0]
+                    head += ["[PAD]"]
                 # mask pad
                 mask = [1] * (token_length + 2) + [0] * pad_length
                 # matrix pad
@@ -161,13 +157,11 @@ class OIEDataset(data.Dataset):
                 ner = [0] + ner[:self.max_length] + [0]
                 mask = [1] * (self.max_length + 2)
                 if pad_length == -1:    # 127
-                    neg = arc[-1]
-                    while neg in arc:
-                        neg = [int(random.uniform(1, token_length+1)), int(random.uniform(0, len(FLAGS.dp_map))), int(random.uniform(1, token_length+1))]
-                    arc += [neg]
-                    # matrix.append([0.0] * (self.max_length + 2))
+                    dp += [0]
+                    head += ["[PAD]"]
                 else:
-                    arc = arc[:(self.max_length + 2)]
+                    dp = dp[:(self.max_length + 2)]
+                    head = head[:(self.max_length + 2)]
                     matrix = [mr[:self.max_length+2] for mr in matrix[:self.max_length+2]]
                 while len(e1) > 0 and e1[-1] + 1 >= self.max_length - 1:
                     e1.pop()
@@ -178,16 +172,18 @@ class OIEDataset(data.Dataset):
 
             # 数字化
             token = tokenizer.convert_tokens_to_ids(token)
+            head = tokenizer.convert_tokens_to_ids(head)
 
             # tensor化
             token = torch.LongTensor(token).cuda() if self.use_cuda else torch.LongTensor(token)
             pos = torch.LongTensor(pos).cuda() if self.use_cuda else torch.LongTensor(pos)
             ner = torch.LongTensor(ner).cuda() if self.use_cuda else torch.LongTensor(ner)
-            arc = torch.LongTensor(arc).cuda() if self.use_cuda else torch.LongTensor(arc)
+            dp = torch.LongTensor(dp).cuda() if self.use_cuda else torch.LongTensor(dp)
+            head = torch.LongTensor(head).cuda() if self.use_cuda else torch.LongTensor(head)
             mask = torch.ByteTensor(mask).cuda() if self.use_cuda else torch.ByteTensor(mask)
             matrix = torch.Tensor(matrix).cuda() if self.use_cuda else torch.Tensor(matrix)
 
-            self.data.append([token, pos, ner, arc, matrix, e1, e2, r, mask])
+            self.data.append([token, pos, ner, dp, head, matrix, e1, e2, r, mask])
 
     def __len__(self):
         return len(self.data)

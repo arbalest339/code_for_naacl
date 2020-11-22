@@ -11,8 +11,8 @@ from torch import mode
 from transformers import BertTokenizer, BertConfig
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR
 from tqdm import tqdm
-from models.main_model import SeqModel
-# from models.simple_model import SeqModel
+# from models.main_model import SeqModel
+from models.oie_model import SeqModel
 from models.cnn_lstm_model import CnnLSTM
 from test import en_metrics, zh_metrics
 from data_reader import OIEDataset
@@ -46,23 +46,22 @@ def select_optim(flags, model):
 
 
 def test(model, test_set):
-    print("Start testing", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
-
     positive_true = 0
     positive_false = 0
     negative_false = 0
     model.eval()
-    for token, pos, ner, arc, matrix, e1, e2, r, mask in test_set.data:
+    for token, pos, ner, dp, head, matrix, e1, e2, r, mask in test_set.data:
         model.zero_grad()
         token = token.unsqueeze(dim=0)
         pos = pos.unsqueeze(dim=0)
         ner = ner.unsqueeze(dim=0)
-        arc = arc.unsqueeze(dim=0)
+        dp = dp.unsqueeze(dim=0)
+        head = head.unsqueeze(dim=0)
         matrix = matrix.unsqueeze(dim=0)
         mask = mask.unsqueeze(dim=0)
-        tag_seq = model.decode(token, pos, ner, arc, matrix, mask)[0]
+        tag_seq = model.decode(token, pos, ner, dp, head, matrix, mask)[0]
         # tag_seq = tag_seq.cpu().detach().numpy().tolist()
-
+        # en_metrics(e1, e2, r, tag_seq) if FLAGS.language == "en" else
         pt, pf, nf = zh_metrics(e1, e2, r, tag_seq)
         positive_true += pt
         positive_false += pf
@@ -73,7 +72,6 @@ def test(model, test_set):
     f1 = 2 * precision * recall / (precision + recall)
 
     print(f"Precision: {precision: .4f}, Recall: {recall: .4f}, F1: {f1: .4f}")
-    print('Testing finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
     return f1
 
 
@@ -115,9 +113,9 @@ def main():
         accs = []
         with tqdm(total=len(train_set)/FLAGS.batch_size, desc=f'Epoch {epoch+1}/{FLAGS.epoch}', unit='it') as pbar:
             for step, data in enumerate(trainset_loader):
-                token, pos, ner, arc, matrix, gold, mask, acc_mask = data
+                token, pos, ner, dp, head, matrix, gold, mask, acc_mask = data
                 model.zero_grad()
-                loss, acc, zero_acc = model(token, pos, ner, arc, matrix, gold, mask, acc_mask)
+                loss, acc, zero_acc = model(token, pos, ner, dp, head, matrix, gold, mask, acc_mask)
                 losses.append(loss.data.item())
                 accs.append(acc.data.item())
                 # backward
@@ -134,9 +132,9 @@ def main():
         losses = []
         accs = []
         for step, data in enumerate(validset_loader):
-            token, pos, ner, arc, matrix, gold, mask, acc_mask = data
+            token, pos, ner, dp, head, matrix, gold, mask, acc_mask = data
             with torch.no_grad():
-                loss, acc, zero_acc = model(token, pos, ner, arc, matrix, gold, mask, acc_mask)
+                loss, acc, zero_acc = model(token, pos, ner, dp, head, matrix, gold, mask, acc_mask)
             losses.append(loss.data.item())
             accs.append(acc.data.item())
         valid_loss = np.mean(losses)
@@ -145,9 +143,9 @@ def main():
         # scheduler.step(epoch)
         print(f"[{epoch + 1}/{FLAGS.epoch}] validset mean_loss: {valid_loss: 0.4f} valid mean_acc: {valid_acc: 0.4f}")
 
-        f1 = test(model, test_set)
-        if f1 > best_acc:
-            best_acc = f1
+        # f1 = test(model, test_set)
+        if valid_acc > best_acc:
+            best_acc = valid_acc
             print('Saving model...  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
             torch.save(model.state_dict(), FLAGS.checkpoint_path)
             print('Saving model finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))

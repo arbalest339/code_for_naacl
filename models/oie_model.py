@@ -33,8 +33,13 @@ class SeqModel(nn.Module):
         self.bert2gcn = nn.Linear(bertconfig.hidden_size, gcnopt.emb_dim)
         self.aggcn = AGGCN(gcnopt, flags)
 
+        # transD
+        dp_emb = np.load(self.dp_path)
+        self.transd = nn.Embedding.from_pretrained(torch.from_numpy(dp_emb))
+        # self.transd = nn.Embedding(dp_emb.shape[0], dp_emb.shape[1])
+
         # full connection layers
-        self.gcn2tag = nn.Linear(gcnopt.emb_dim, self.label_num)
+        self.gcn2tag = nn.Linear(gcnopt.emb_dim + flags.dp_dim, self.label_num)
 
         # CRF layer
         self.crf_layer = CRF(self.label_num, batch_first=True)
@@ -51,12 +56,11 @@ class SeqModel(nn.Module):
 
         # fc layer
         # TransD
-        # batch_r = arc[:, :, 1]
-        # dp_emb = self.transd(batch_r)
+        dp_emb = self.transd(dp)
 
         # feature concat
-        # logits = torch.cat([bert_hidden, dp_emb], dim=-1)
-        logits = self.gcn2tag(gcn_hidden)
+        logits = torch.cat([gcn_hidden, dp_emb], dim=-1)
+        logits = self.gcn2tag(logits)
 
         # crf loss
         loss = - self.crf_layer(logits, gold, mask=mask, reduction="mean")
@@ -72,6 +76,7 @@ class SeqModel(nn.Module):
 
     def decode(self, token, pos, ner, dp, head, matrix, mask):
         bert_hidden = self.bert(token, attention_mask=mask).hidden_states[-1]
+        bert_hidden = self.bn(bert_hidden)
         bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
 
         gcn_input = self.bert2gcn(bert_hidden)
@@ -79,12 +84,11 @@ class SeqModel(nn.Module):
 
         # fc layer
         # TransD
-        # batch_r = arc[:, :, 1]
-        # dp_emb = self.transd(batch_r)
+        dp_emb = self.transd(dp)
 
         # feature concat
-        # logits = torch.cat([bert_hidden, dp_emb], dim=-1)
-        logits = self.gcn2tag(gcn_hidden)
+        logits = torch.cat([gcn_hidden, dp_emb], dim=-1)
+        logits = self.gcn2tag(logits)
 
         # crf decode
         tag_seq = self.crf_layer.decode(logits, mask=mask)

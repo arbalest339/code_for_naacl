@@ -7,7 +7,6 @@ Description: code and model configs
 FilePath: /entity_disambiguation/config.py
 '''
 import os
-import nni
 import json
 import torch
 import argparse
@@ -16,7 +15,7 @@ import argparse
 class Flags(object):
     def __init__(self):
         # task info
-        self.language = "en"    # en, zh
+        self.language = "zh"    # en, zh
         self.task = "ore"    # dp_emb, ore, oie
         self.model_type = "bert"   # cnn_lstm, bert
         self.is_continue = False
@@ -39,7 +38,9 @@ class Flags(object):
         self.checkpoint_dir = os.path.join(curpath, "checkpoints")  # Path of model checkpoints
         self.checkpoint_path = os.path.join(self.checkpoint_dir, f"{self.task}_{self.language}.pkl")
         self.dp_checkpoint_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}.pkl")
-        self.dp_embedding_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}(4-128).npy")
+        self.dp_embedding_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}(4-64).npy")
+        if self.language == "en" and self.task == "oie":
+            self.dp_embedding_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}(4-128).npy")
 
         self.data_dir = os.path.join(curpath, f"{self.language}_data")  # Path of input data dir
         # self.data_path = os.path.join(self.data_dir, f"{self.task}_data_{self.language}.json")
@@ -56,12 +57,12 @@ class Flags(object):
         # train hyper parameters
         self.learning_rate = 3.e-5
         self.epoch = 30
-        self.batch_size = 20
+        self.batch_size = 20 if self.language == "zh" or self.task == "oie" else 32
         self.test_batch_size = 8
-        self.max_length = 128 if self.language == "zh" else 40
+        self.max_length = 128 if self.language == "zh" or self.task == "oie" else 40
         self.dropout_rate = 0.5
         self.weight_decay = 1.e-3
-        self.patient = 5
+        self.patient = 3
         self.use_cuda = True
 
         # TransD config

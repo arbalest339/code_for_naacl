@@ -104,6 +104,7 @@ class SeqModel(nn.Module):
 
         # Pre-trained BERT model
         self.bert = BertForTokenClassification.from_pretrained(flags.pretrained, config=bertconfig)
+        # self.bert = BertForTokenClassification(bertconfig)
         # Dropout to avoid overfitting
         self.dropout1 = nn.Dropout(flags.dropout_rate)
         self.dropout2 = nn.Dropout(flags.dropout_rate)
@@ -128,14 +129,10 @@ class SeqModel(nn.Module):
         self.crf_layer = CRF(self.label_num, batch_first=True)
         self.loss = nn.CrossEntropyLoss()
 
-    def forward(self, token, pos, ner, arc, matrix, gold, mask, acc_mask):
+    def forward(self, token, pos, ner, dp, head, matrix, gold, mask, acc_mask):
         # BERT's last hidden layer
-        token_flatten = token.view(-1)
-        batch_h = arc[:, :, 0].view(-1)
-        batch_h = token_flatten[batch_h].reshape(token.shape)
-
         bert_hidden_t = self.bert(token, labels=gold, attention_mask=mask).hidden_states[-1]
-        bert_hidden_h = self.bert(batch_h, labels=gold, attention_mask=mask).hidden_states[-1]
+        bert_hidden_h = self.bert(head, labels=gold, attention_mask=mask).hidden_states[-1]
         bert_hidden_t = self.bn1(bert_hidden_t)
         bert_hidden_h = self.bn2(bert_hidden_h)
         bert_hidden_t = self.bert2mid(bert_hidden_t)
@@ -145,8 +142,7 @@ class SeqModel(nn.Module):
 
         # fc layer
         # TransD
-        batch_r = arc[:, :, 1]
-        dp_emb = self.transd(batch_r)
+        dp_emb = self.transd(dp)
         pos_emb = self.pos_emb(pos)
         ner_emb = self.ner_emb(ner)
 
@@ -170,13 +166,9 @@ class SeqModel(nn.Module):
 
         return loss, acc, zero_acc
 
-    def decode(self, token, pos, ner, arc, matrix, mask):
-        token_flatten = token.view(-1)
-        batch_h = arc[:, :, 0].view(-1)
-        batch_h = token_flatten[batch_h].reshape(token.shape)
-
+    def decode(self, token, pos, ner, dp, head, matrix, mask):
         bert_hidden_t = self.bert(token, attention_mask=mask).hidden_states[-1]
-        bert_hidden_h = self.bert(batch_h, attention_mask=mask).hidden_states[-1]
+        bert_hidden_h = self.bert(head, attention_mask=mask).hidden_states[-1]
         bert_hidden_t = self.bn1(bert_hidden_t)
         bert_hidden_h = self.bn2(bert_hidden_h)
         bert_hidden_t = self.bert2mid(bert_hidden_t)
@@ -186,8 +178,7 @@ class SeqModel(nn.Module):
 
         # fc layer
         # TransD
-        batch_r = arc[:, :, 1]
-        dp_emb = self.transd(batch_r)
+        dp_emb = self.transd(dp)
         pos_emb = self.pos_emb(pos)
         ner_emb = self.ner_emb(ner)
 

@@ -9,8 +9,8 @@ import torch
 import numpy as np
 
 from transformers import BertTokenizer, BertConfig
-from models.main_model import SeqModel
-# from models.simple_model import SeqModel
+# from models.main_model import SeqModel
+from models.oie_model import SeqModel
 from data_reader import OIEDataset
 from config import FLAGS, aggcnargs
 
@@ -85,8 +85,8 @@ def zh_metrics(e1, e2, r, tag_seq):
 
 def test():
     # load from pretrained config file
-    bertconfig = json.load(open(FLAGS.pretrained_config))
-    bertconfig = BertConfig(**bertconfig)
+    # bertconfig = json.load(open(FLAGS.pretrained_config))
+    bertconfig = BertConfig.from_pretrained(FLAGS.pretrained)
 
     # Initiate model
     print("Initiating model.")
@@ -100,7 +100,7 @@ def test():
 
     # load data
     print("Loading traning and valid data")
-    tokenizer = BertTokenizer.from_pretrained(FLAGS.pretrained_vocab)
+    tokenizer = BertTokenizer.from_pretrained(FLAGS.pretrained)
     test_set = OIEDataset(FLAGS.test_path, FLAGS.test_mat, tokenizer, FLAGS.max_length, mode="test")
     wf = open("out/auto", "a")
     wf.write("Start testing " + str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))) + "\n")
@@ -110,15 +110,16 @@ def test():
     positive_false = 0
     negative_false = 0
     model.eval()
-    for token, pos, ner, arc, matrix, e1, e2, r, mask in test_set.data:
+    for token, pos, ner, dp, head, matrix, e1, e2, r, mask in test_set.data:
         model.zero_grad()
         token = token.unsqueeze(dim=0)
         pos = pos.unsqueeze(dim=0)
         ner = ner.unsqueeze(dim=0)
-        arc = arc.unsqueeze(dim=0)
+        dp = dp.unsqueeze(dim=0)
+        head = head.unsqueeze(dim=0)
         matrix = matrix.unsqueeze(dim=0)
         mask = mask.unsqueeze(dim=0)
-        tag_seq = model.decode(token, pos, ner, arc, matrix, mask)[0]
+        tag_seq = model.decode(token, pos, ner, dp, head, matrix, mask)[0]
         # tag_seq = tag_seq.cpu().detach().numpy().tolist()
         # en_metrics(e1, e2, r, tag_seq) if FLAGS.language == "en" else
         pt, pf, nf = zh_metrics(e1, e2, r, tag_seq)

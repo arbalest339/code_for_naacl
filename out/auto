@@ -1,0 +1,167 @@
+Start testing 2020-11-18 19:01:17
+Precision:  0.7367, Recall:  0.2668, F1:  0.3918
+Testing finished 2020-11-18 19:02:18
+Start testing 2020-11-18 20:01:20
+Precision:  0.5533, Recall:  0.4036, F1:  0.4667
+Testing finished 2020-11-18 20:02:30
+Start testing 2020-11-18 21:00:34
+Precision:  0.4969, Recall:  0.4420, F1:  0.4679
+Testing finished 2020-11-18 21:01:35
+Start testing 2020-11-18 21:48:05
+Precision:  0.5857, Recall:  0.4304, F1:  0.4962
+Testing finished 2020-11-18 21:49:07
+Start testing 2020-11-18 22:41:47
+Precision:  0.5596, Recall:  0.4007, F1:  0.4670
+Testing finished 2020-11-18 22:42:48
+Start testing 2020-11-18 23:35:42
+Precision:  0.5564, Recall:  0.4135, F1:  0.4744
+Testing finished 2020-11-18 23:36:43
+
+Start testing 2020-11-19 09:21:40
+Precision:  0.7568, Recall:  0.8609, F1:  0.8055
+Testing finished 2020-11-19 09:22:21
+Start testing 2020-11-19 09:36:23
+Precision:  0.7380, Recall:  0.8742, F1:  0.8004
+Testing finished 2020-11-19 09:37:04
+Start testing 2020-11-19 09:51:28
+Precision:  0.7447, Recall:  0.8715, F1:  0.8032
+Testing finished 2020-11-19 09:52:08
+Start testing 2020-11-19 10:06:09
+Precision:  0.7730, Recall:  0.8428, F1:  0.8064
+Testing finished 2020-11-19 10:06:48
+Start testing 2020-11-19 10:20:55
+Precision:  0.7662, Recall:  0.8501, F1:  0.8060
+Testing finished 2020-11-19 10:21:36
+
+Start testing 2020-11-19 10:36:51
+Precision:  0.7348, Recall:  0.8721, F1:  0.7976
+Testing finished 2020-11-19 10:37:33
+Start testing 2020-11-19 10:45:13
+Precision:  0.7410, Recall:  0.8757, F1:  0.8027
+Testing finished 2020-11-19 10:45:54
+Start testing 2020-11-19 10:55:28
+Precision:  0.7113, Recall:  0.8890, F1:  0.7903
+Testing finished 2020-11-19 10:56:11
+Start testing 2020-11-19 11:05:22
+Precision:  0.7389, Recall:  0.8779, F1:  0.8025
+Testing finished 2020-11-19 11:06:03
+Start testing 2020-11-19 11:19:34
+Precision:  0.7436, Recall:  0.8679, F1:  0.8010
+Testing finished 2020-11-19 11:20:13
+
+Start testing 2020-11-19 12:03:45
+Precision:  0.7756, Recall:  0.8431, F1:  0.8080
+Testing finished 2020-11-19 12:04:30
+Start testing 2020-11-19 12:42:59
+Precision:  0.8176, Recall:  0.7944, F1:  0.8058
+Testing finished 2020-11-19 12:43:40
+Start testing 2020-11-19 13:15:03
+Precision:  0.7955, Recall:  0.8168, F1:  0.8060
+Testing finished 2020-11-19 13:15:44
+Start testing 2020-11-19 13:49:46
+Precision:  0.8107, Recall:  0.8024, F1:  0.8065
+Testing finished 2020-11-19 13:50:29
+Start testing 2020-11-19 14:16:48
+Precision:  0.7980, Recall:  0.8285, F1:  0.8130
+Testing finished 2020-11-19 14:17:29
+
+Start testing 2020-11-19 14:49:44
+Precision:  0.7542, Recall:  0.8717, F1:  0.8087
+Testing finished 2020-11-19 14:50:16
+Start testing 2020-11-19 15:00:58
+Precision:  0.7417, Recall:  0.8828, F1:  0.8061
+Testing finished 2020-11-19 15:01:29
+Start testing 2020-11-19 15:12:15
+Precision:  0.7316, Recall:  0.8972, F1:  0.8060
+Testing finished 2020-11-19 15:12:47
+Start testing 2020-11-19 15:23:29
+Precision:  0.7306, Recall:  0.8870, F1:  0.8012
+Testing finished 2020-11-19 15:24:03
+Start testing 2020-11-19 15:35:17
+Precision:  0.7387, Recall:  0.8841, F1:  0.8049
+Testing finished 2020-11-19 15:35:48
+
+BERT no Pretrain
+Start testing 2020-11-19 22:03:59
+Precision:  0.6249, Recall:  0.7520, F1:  0.6826
+Testing finished 2020-11-19 22:04:40
+Start testing 2020-11-19 22:23:10
+Precision:  0.6367, Recall:  0.8008, F1:  0.7094
+Testing finished 2020-11-19 22:23:51
+Start testing 2020-11-19 22:43:33
+Precision:  0.6424, Recall:  0.7970, F1:  0.7114
+Testing finished 2020-11-19 22:44:12
+Start testing 2020-11-19 22:52:42
+Precision:  0.6159, Recall:  0.7350, F1:  0.6702
+Testing finished 2020-11-19 22:53:21
+Start testing 2020-11-19 23:11:27
+Precision:  0.6389, Recall:  0.7889, F1:  0.7060
+Testing finished 2020-11-19 23:12:06
+
+BERT +GCN+transD en ore
+Start testing 2020-11-19 23:32:08
+Precision:  0.7977, Recall:  0.8207, F1:  0.8091
+Testing finished 2020-11-19 23:32:40
+Start testing 2020-11-19 23:41:44
+Precision:  0.7544, Recall:  0.8717, F1:  0.8088
+Testing finished 2020-11-19 23:42:17
+Start testing 2020-11-19 23:54:42
+Precision:  0.7714, Recall:  0.8523, F1:  0.8098
+Testing finished 2020-11-19 23:55:13
+Start testing 2020-11-20 00:04:23
+Precision:  0.7861, Recall:  0.8293, F1:  0.8071
+Testing finished 2020-11-20 00:04:54
+Start testing 2020-11-20 00:16:14
+Precision:  0.7864, Recall:  0.8409, F1:  0.8128
+Testing finished 2020-11-20 00:16:46
+
+BERT +GCN+transD zh oie
+Start testing 2020-11-20 00:46:41
+Precision:  0.6208, Recall:  0.4225, F1:  0.5028
+Testing finished 2020-11-20 00:47:27
+Start testing 2020-11-20 01:16:26
+Precision:  0.5748, Recall:  0.4305, F1:  0.4923
+Testing finished 2020-11-20 01:17:15
+Start testing 2020-11-20 01:45:45
+Precision:  0.5643, Recall:  0.4405, F1:  0.4948
+Testing finished 2020-11-20 01:46:31
+Start testing 2020-11-20 02:10:40
+Precision:  0.6461, Recall:  0.3936, F1:  0.4892
+Testing finished 2020-11-20 02:11:26
+Start testing 2020-11-20 02:35:50
+Precision:  0.6266, Recall:  0.4202, F1:  0.5031
+Testing finished 2020-11-20 02:36:36
+
+BERT +GCN no trans zh oie
+Start testing 2020-11-20 08:41:45
+Precision:  0.4942, Recall:  0.4571, F1:  0.4749
+Testing finished 2020-11-20 08:42:31
+Start testing 2020-11-20 09:13:32
+Precision:  0.5117, Recall:  0.4293, F1:  0.4669
+Testing finished 2020-11-20 09:14:18
+Start testing 2020-11-20 09:41:48
+Precision:  0.5013, Recall:  0.4704, F1:  0.4853
+Testing finished 2020-11-20 09:42:34
+Start testing 2020-11-20 10:06:42
+Precision:  0.6092, Recall:  0.4110, F1:  0.4908
+Testing finished 2020-11-20 10:07:28
+Start testing 2020-11-20 10:38:52
+Precision:  0.4469, Recall:  0.4741, F1:  0.4601
+Testing finished 2020-11-20 10:39:38
+
+BERT +GCN no trans zh oRe
+Start testing 2020-11-20 10:58:45
+Precision:  0.8354, Recall:  0.8572, F1:  0.8462
+Testing finished 2020-11-20 10:59:30
+Start testing 2020-11-20 11:14:08
+Precision:  0.8282, Recall:  0.8576, F1:  0.8427
+Testing finished 2020-11-20 11:14:57
+Start testing 2020-11-20 11:29:45
+Precision:  0.8226, Recall:  0.8646, F1:  0.8430
+Testing finished 2020-11-20 11:30:27
+Start testing 2020-11-20 11:44:54
+Precision:  0.8354, Recall:  0.8550, F1:  0.8451
+Testing finished 2020-11-20 11:45:34
+Start testing 2020-11-20 11:50:57
+Precision:  0.8282, Recall:  0.8507, F1:  0.8393
+Testing finished 2020-11-20 11:51:39

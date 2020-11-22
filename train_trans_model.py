@@ -30,8 +30,7 @@ def select_optim(flags, model):
 
 def main():
     # load from pretrained config file
-    bertconfig = json.load(open(FLAGS.pretrained_config))
-    bertconfig = BertConfig(**bertconfig)
+    bertconfig = BertConfig.from_pretrained(FLAGS.pretrained)
 
     # Initiate model
     print("Initiating model.")
@@ -45,7 +44,7 @@ def main():
 
     # load data
     print("Loading traning and valid data")
-    tokenizer = BertTokenizer.from_pretrained(FLAGS.pretrained_vocab)
+    tokenizer = BertTokenizer.from_pretrained(FLAGS.pretrained)
     train_set = OIEDataset(FLAGS.train_path, FLAGS.train_mat, tokenizer, FLAGS.max_length, mode="train")
     dev_set = OIEDataset(FLAGS.dev_path, FLAGS.dev_mat, tokenizer, FLAGS.max_length, mode="train")
     trainset_loader = torch.utils.data.DataLoader(train_set, FLAGS.batch_size, shuffle=False, num_workers=0, drop_last=True)
