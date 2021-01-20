@@ -15,7 +15,7 @@ import argparse
 class Flags(object):
     def __init__(self):
         # task info
-        self.language = "zh"    # en, zh
+        self.language = "en"    # en, zh
         self.task = "ore"    # dp_emb, ore, oie
         self.model_type = "bert"   # cnn_lstm, bert
         self.is_continue = False
