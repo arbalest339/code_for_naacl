@@ -1,7 +1,7 @@
 '''
 Author: your name
 Date: 2020-11-01 08:57:41
-LastEditTime: 2021-04-23 11:24:02
+LastEditTime: 2021-04-23 17:09:16
 LastEditors: Please set LastEditors
 Description: In User Settings Edit
 FilePath: /code_for_naacl/models/oie_model.py
@@ -81,12 +81,12 @@ class SeqModel(nn.Module):
             pos_att = self.posAtt(bert_hidden, pos_emb, pos_emb, mask)
             logits = torch.cat([logits, pos_att], dim=-1)
         if "ner" in self.features:
-            ner_emb = self.posEmb(ner)
-            ner_att = self.posAtt(bert_hidden, ner_emb, ner_emb, mask)
+            ner_emb = self.nerEmb(ner)
+            ner_att = self.nerAtt(bert_hidden, ner_emb, ner_emb, mask)
             logits = torch.cat([logits, ner_att], dim=-1)
         if "dp" in self.features:
-            dp_emb = self.posEmb(dp)
-            dp_att = self.posAtt(bert_hidden, dp_emb, dp_emb, mask)
+            dp_emb = self.dpEmb(dp)
+            dp_att = self.dpAtt(bert_hidden, dp_emb, dp_emb, mask)
             logits = torch.cat([logits, dp_att], dim=-1)
 
         # logits = self.gcn2tag(logits)
@@ -121,12 +121,12 @@ class SeqModel(nn.Module):
             pos_att = self.posAtt(bert_hidden, pos_emb, pos_emb, mask)
             logits = torch.cat([logits, pos_att], dim=-1)
         if "ner" in self.features:
-            ner_emb = self.posEmb(ner)
-            ner_att = self.posAtt(bert_hidden, ner_emb, ner_emb, mask)
+            ner_emb = self.nerEmb(ner)
+            ner_att = self.nerAtt(bert_hidden, ner_emb, ner_emb, mask)
             logits = torch.cat([logits, ner_att], dim=-1)
         if "dp" in self.features:
-            dp_emb = self.posEmb(dp)
-            dp_att = self.posAtt(bert_hidden, dp_emb, dp_emb, mask)
+            dp_emb = self.dpEmb(dp)
+            dp_att = self.dpAtt(bert_hidden, dp_emb, dp_emb, mask)
             logits = torch.cat([logits, dp_att], dim=-1)
 
         # logits = self.gcn2tag(logits)
