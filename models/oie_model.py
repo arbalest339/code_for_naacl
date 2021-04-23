@@ -1,3 +1,11 @@
+'''
+Author: your name
+Date: 2020-11-01 08:57:41
+LastEditTime: 2021-04-14 17:30:03
+LastEditors: Please set LastEditors
+Description: In User Settings Edit
+FilePath: /code_for_naacl/models/oie_model.py
+'''
 import torch
 from torch import embedding, log_softmax, softmax
 import torch.nn as nn
@@ -22,15 +30,16 @@ class SeqModel(nn.Module):
         self.dp_path = flags.dp_embedding_path
 
         self.act = nn.Sigmoid()
-        self.bn = nn.BatchNorm1d(flags.max_length)
+        self.ln = nn.LayerNorm(bertconfig.hidden_size)
+        # self.bn = nn.BatchNorm1d(flags.max_length)
 
         self.bert = BertForTokenClassification.from_pretrained(flags.pretrained, config=bertconfig)
-        self.bn = nn.BatchNorm1d(flags.max_length)
         # Dropout to avoid overfitting
         self.dropout = nn.Dropout(flags.dropout_rate)
 
         # aggcn
-        self.bert2gcn = nn.Linear(bertconfig.hidden_size, gcnopt.emb_dim)
+        self.bert2label = nn.Linear(bertconfig.hidden_size + flags.dp_dim, self.label_num)
+        # self.bert2gcn = nn.Linear(bertconfig.hidden_size, gcnopt.emb_dim)
         self.aggcn = AGGCN(gcnopt, flags)
 
         # transD
@@ -48,19 +57,20 @@ class SeqModel(nn.Module):
     def forward(self, token, pos, ner, dp, head, matrix, gold, mask, acc_mask):
         # BERT's last hidden layer
         bert_hidden = self.bert(token, labels=gold, attention_mask=mask).hidden_states[-1]
-        bert_hidden = self.bn(bert_hidden)
+        # bert_hidden = self.ln(bert_hidden)
         bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
 
-        gcn_input = self.bert2gcn(bert_hidden)
-        gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
+        # gcn_input = self.bert2gcn(bert_hidden)
+        # gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
 
         # fc layer
         # TransD
         dp_emb = self.transd(dp)
 
         # feature concat
-        logits = torch.cat([gcn_hidden, dp_emb], dim=-1)
-        logits = self.gcn2tag(logits)
+        logits = torch.cat([bert_hidden, dp_emb], dim=-1)
+        # logits = self.gcn2tag(logits)
+        logits = self.bert2label(logits)
 
         # crf loss
         loss = - self.crf_layer(logits, gold, mask=mask, reduction="mean")
@@ -76,19 +86,20 @@ class SeqModel(nn.Module):
 
     def decode(self, token, pos, ner, dp, head, matrix, mask):
         bert_hidden = self.bert(token, attention_mask=mask).hidden_states[-1]
-        bert_hidden = self.bn(bert_hidden)
-        bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
+        # bert_hidden = self.ln(bert_hidden)
+        # bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
 
-        gcn_input = self.bert2gcn(bert_hidden)
-        gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
+        # gcn_input = self.bert2gcn(bert_hidden)
+        # gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
 
-        # fc layer
-        # TransD
+        # # fc layer
+        # # TransD
         dp_emb = self.transd(dp)
 
-        # feature concat
-        logits = torch.cat([gcn_hidden, dp_emb], dim=-1)
-        logits = self.gcn2tag(logits)
+        # # feature concat
+        logits = torch.cat([bert_hidden, dp_emb], dim=-1)
+        # logits = self.gcn2tag(logits)
+        logits = self.bert2label(logits)
 
         # crf decode
         tag_seq = self.crf_layer.decode(logits, mask=mask)

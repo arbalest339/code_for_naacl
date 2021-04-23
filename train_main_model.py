@@ -94,10 +94,9 @@ def main():
     print("Loading traning and valid data")
     tokenizer = BertTokenizer.from_pretrained(FLAGS.pretrained)
     train_set = OIEDataset(FLAGS.train_path, FLAGS.train_mat, tokenizer, FLAGS.max_length, mode="train")
-    dev_set = OIEDataset(FLAGS.dev_path, FLAGS.dev_mat, tokenizer, FLAGS.max_length, mode="train")
-    test_set = OIEDataset(FLAGS.test_path, FLAGS.test_mat, tokenizer, FLAGS.max_length, mode="test")
+    dev_set = OIEDataset(FLAGS.dev_path, FLAGS.dev_mat, tokenizer, FLAGS.max_length, mode="test")
     trainset_loader = torch.utils.data.DataLoader(train_set, FLAGS.batch_size, num_workers=0, drop_last=True)
-    validset_loader = torch.utils.data.DataLoader(dev_set, FLAGS.test_batch_size, num_workers=0, drop_last=True)
+    # validset_loader = torch.utils.data.DataLoader(dev_set, FLAGS.test_batch_size, num_workers=0, drop_last=True)
 
     optimizer = select_optim(FLAGS, model)
     scheduler = ReduceLROnPlateau(optimizer, 'min', verbose=1, patience=2, factor=0.5, min_lr=1.e-8)
@@ -128,24 +127,9 @@ def main():
         train_acc = np.mean(accs)
         print(f"[{epoch + 1}/{FLAGS.epoch}] trainset mean_loss: {train_loss: 0.4f} trainset mean_acc: {train_acc: 0.4f}")
 
-        model.eval()
-        losses = []
-        accs = []
-        for step, data in enumerate(validset_loader):
-            token, pos, ner, dp, head, matrix, gold, mask, acc_mask = data
-            with torch.no_grad():
-                loss, acc, zero_acc = model(token, pos, ner, dp, head, matrix, gold, mask, acc_mask)
-            losses.append(loss.data.item())
-            accs.append(acc.data.item())
-        valid_loss = np.mean(losses)
-        valid_acc = np.mean(accs)
-        scheduler.step(valid_loss)
-        # scheduler.step(epoch)
-        print(f"[{epoch + 1}/{FLAGS.epoch}] validset mean_loss: {valid_loss: 0.4f} valid mean_acc: {valid_acc: 0.4f}")
-
-        # f1 = test(model, test_set)
-        if valid_acc > best_acc:
-            best_acc = valid_acc
+        f1 = test(model, dev_set)
+        if f1 > best_acc:
+            best_acc = f1
             print('Saving model...  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
             torch.save(model.state_dict(), FLAGS.checkpoint_path)
             print('Saving model finished.  ', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))

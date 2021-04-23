@@ -1,7 +1,7 @@
 '''
 Author: your name
 Date: 2020-09-23 09:23:31
-LastEditTime: 2020-10-21 17:58:33
+LastEditTime: 2021-04-14 17:55:39
 LastEditors: Please set LastEditors
 Description: code and model configs
 FilePath: /entity_disambiguation/config.py
@@ -15,8 +15,8 @@ import argparse
 class Flags(object):
     def __init__(self):
         # task info
-        self.language = "en"    # en, zh
-        self.task = "ore"    # dp_emb, ore, oie
+        self.language = "zh"    # en, zh
+        self.task = "oie"    # dp_emb, ore, oie
         self.model_type = "bert"   # cnn_lstm, bert
         self.is_continue = False
         self.is_test = False
@@ -40,7 +40,7 @@ class Flags(object):
         self.dp_checkpoint_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}.pkl")
         self.dp_embedding_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}(4-64).npy")
         if self.language == "en" and self.task == "oie":
-            self.dp_embedding_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}(4-128).npy")
+            self.dp_embedding_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}(4-32).npy")
 
         self.data_dir = os.path.join(curpath, f"{self.language}_data")  # Path of input data dir
         # self.data_path = os.path.join(self.data_dir, f"{self.task}_data_{self.language}.json")
@@ -89,8 +89,6 @@ FLAGS = Flags()
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', type=str, default='dataset/tacred')
-parser.add_argument('--vocab_dir', type=str, default='dataset/vocab')
 parser.add_argument('--emb_dim', type=int, default=300, help='Word embedding dimension.')
 parser.add_argument('--ner_dim', type=int, default=30, help='NER embedding dimension.')
 parser.add_argument('--pos_dim', type=int, default=30, help='POS embedding dimension.')
@@ -102,7 +100,6 @@ parser.add_argument('--word_dropout', type=float, default=0.04, help='The rate a
 parser.add_argument('--topn', type=int, default=1e10, help='Only finetune top N word embeddings.')
 parser.add_argument('--lower', dest='lower', action='store_true', help='Lowercase all words.')
 parser.add_argument('--no-lower', dest='lower', action='store_false')
-parser.set_defaults(lower=False)
 
 parser.add_argument('--heads', type=int, default=3, help='Num of heads in multi-head attention.')
 parser.add_argument('--sublayer_first', type=int, default=2, help='Num of the first sublayers in dcgcn block.')
@@ -119,25 +116,7 @@ parser.add_argument('--rnn_layers', type=int, default=1, help='Number of RNN lay
 parser.add_argument('--rnn_dropout', type=float, default=0.5, help='RNN dropout rate.')
 
 parser.add_argument('--lr', type=float, default=0.7, help='Applies to sgd and adagrad.')
-parser.add_argument('--lr_decay', type=float, default=0.9, help='Learning rate decay rate.')
-parser.add_argument('--decay_epoch', type=int, default=5, help='Decay learning rate after this epoch.')
-parser.add_argument('--optim', choices=['sgd', 'adagrad', 'adam', 'adamax'], default='sgd', help='Optimizer: sgd, adagrad, adam or adamax.')
-parser.add_argument('--num_epoch', type=int, default=100, help='Number of total training epochs.')
-parser.add_argument('--batch_size', type=int, default=50, help='Training batch size.')
-parser.add_argument('--max_grad_norm', type=float, default=5.0, help='Gradient clipping.')
-parser.add_argument('--log_step', type=int, default=20, help='Print log every k steps.')
-parser.add_argument('--log', type=str, default='logs.txt', help='Write training log to file.')
-parser.add_argument('--save_epoch', type=int, default=100, help='Save model checkpoints every k epochs.')
-parser.add_argument('--save_dir', type=str, default='./saved_models', help='Root dir for saving models.')
-parser.add_argument('--id', type=str, default='00', help='Model ID under which to save models.')
-parser.add_argument('--info', type=str, default='', help='Optional info for the experiment.')
-
-parser.add_argument('--seed', type=int, default=0)
 parser.add_argument('--cuda', type=bool, default=torch.cuda.is_available())
-parser.add_argument('--cpu', action='store_true', default=False, help='Ignore CUDA.')
-
-parser.add_argument('--load', dest='load', action='store_true', help='Load pretrained model.')
-parser.add_argument('--model_file', type=str, help='Filename of the pretrained model.')
 
 aggcnargs = parser.parse_args()
 FLAGS.lr = aggcnargs.lr
