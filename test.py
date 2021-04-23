@@ -99,10 +99,10 @@ def test():
     print("Model initialized.")
 
     # load data
-    print("Loading traning and valid data")
+    print("Loading test data")
     tokenizer = BertTokenizer.from_pretrained(FLAGS.pretrained)
     test_set = OIEDataset(FLAGS.test_path, FLAGS.test_mat, tokenizer, FLAGS.max_length, mode="test")
-    wf = open("out/auto", "a")
+    wf = open("out/coatt", "a")
     wf.write("Start testing " + str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))) + "\n")
     print("Start testing", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 

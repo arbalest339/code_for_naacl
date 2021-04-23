@@ -1,21 +1,20 @@
 '''
 Author: your name
 Date: 2020-11-01 08:57:41
-LastEditTime: 2021-04-14 17:30:03
+LastEditTime: 2021-04-23 11:24:02
 LastEditors: Please set LastEditors
 Description: In User Settings Edit
 FilePath: /code_for_naacl/models/oie_model.py
 '''
+
 import torch
-from torch import embedding, log_softmax, softmax
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 import numpy as np
 from torch.nn.modules.loss import CrossEntropyLoss
 from transformers import BertForTokenClassification
 from models.aggcn import AGGCN
 from models.TransD import TransD
+from models.attention import BasicAttention
 from torchcrf import CRF
 
 
@@ -23,11 +22,11 @@ class SeqModel(nn.Module):
     def __init__(self, flags, bertconfig, gcnopt):
         super(SeqModel, self).__init__()
         self.label_num = len(flags.label_map)
-        self.dp_path = flags.dp_embedding_path
         bertconfig.num_labels = self.label_num
         bertconfig.return_dict = True
         bertconfig.output_hidden_states = True
         self.dp_path = flags.dp_embedding_path
+        self.features = flags.features
 
         self.act = nn.Sigmoid()
         self.ln = nn.LayerNorm(bertconfig.hidden_size)
@@ -38,17 +37,28 @@ class SeqModel(nn.Module):
         self.dropout = nn.Dropout(flags.dropout_rate)
 
         # aggcn
-        self.bert2label = nn.Linear(bertconfig.hidden_size + flags.dp_dim, self.label_num)
+        # self.bert2label = nn.Linear(bertconfig.hidden_size + flags.dp_dim, self.label_num)
         # self.bert2gcn = nn.Linear(bertconfig.hidden_size, gcnopt.emb_dim)
-        self.aggcn = AGGCN(gcnopt, flags)
+        # self.aggcn = AGGCN(gcnopt, flags)
 
-        # transD
-        dp_emb = np.load(self.dp_path)
-        self.transd = nn.Embedding.from_pretrained(torch.from_numpy(dp_emb))
-        # self.transd = nn.Embedding(dp_emb.shape[0], dp_emb.shape[1])
+        # features
+        if "pos" in self.features:
+            self.posEmb = nn.Embedding(len(flags.pos_map), flags.feature_dim)
+            self.posAtt = BasicAttention(bertconfig.hidden_size, flags.feature_dim, flags.feature_dim)
+        if "ner" in self.features:
+            self.nerEmb = nn.Embedding(len(flags.ner_map), flags.feature_dim)
+            self.nerAtt = BasicAttention(bertconfig.hidden_size, flags.feature_dim, flags.feature_dim)
+        if "dp" in self.features:
+            dpEmb = np.load(self.dp_path)
+            if flags.use_transd:
+                self.dpEmb = nn.Embedding.from_pretrained(torch.from_numpy(dpEmb))
+            else:
+                self.dpEmb = nn.Embedding(len(flags.dp_map), flags.feature_dim)
+            self.dpAtt = BasicAttention(bertconfig.hidden_size, flags.feature_dim, flags.feature_dim)
 
         # full connection layers
-        self.gcn2tag = nn.Linear(gcnopt.emb_dim + flags.dp_dim, self.label_num)
+        # self.gcn2tag = nn.Linear(gcnopt.emb_dim + flags.dp_dim, self.label_num)
+        self.att2label = nn.Linear(bertconfig.hidden_size + len(self.features)*flags.feature_dim, self.label_num)
 
         # CRF layer
         self.crf_layer = CRF(self.label_num, batch_first=True)
@@ -58,19 +68,30 @@ class SeqModel(nn.Module):
         # BERT's last hidden layer
         bert_hidden = self.bert(token, labels=gold, attention_mask=mask).hidden_states[-1]
         # bert_hidden = self.ln(bert_hidden)
-        bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
+        # bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
 
         # gcn_input = self.bert2gcn(bert_hidden)
         # gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
 
+        logits = bert_hidden
         # fc layer
-        # TransD
-        dp_emb = self.transd(dp)
+        # co-att
+        if "pos" in self.features:
+            pos_emb = self.posEmb(pos)
+            pos_att = self.posAtt(bert_hidden, pos_emb, pos_emb, mask)
+            logits = torch.cat([logits, pos_att], dim=-1)
+        if "ner" in self.features:
+            ner_emb = self.posEmb(ner)
+            ner_att = self.posAtt(bert_hidden, ner_emb, ner_emb, mask)
+            logits = torch.cat([logits, ner_att], dim=-1)
+        if "dp" in self.features:
+            dp_emb = self.posEmb(dp)
+            dp_att = self.posAtt(bert_hidden, dp_emb, dp_emb, mask)
+            logits = torch.cat([logits, dp_att], dim=-1)
 
-        # feature concat
-        logits = torch.cat([bert_hidden, dp_emb], dim=-1)
         # logits = self.gcn2tag(logits)
-        logits = self.bert2label(logits)
+        logits = self.dropout(logits)
+        logits = self.att2label(logits)
 
         # crf loss
         loss = - self.crf_layer(logits, gold, mask=mask, reduction="mean")
@@ -92,14 +113,24 @@ class SeqModel(nn.Module):
         # gcn_input = self.bert2gcn(bert_hidden)
         # gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
 
-        # # fc layer
-        # # TransD
-        dp_emb = self.transd(dp)
+        logits = bert_hidden
+        # fc layer
+        # co-att
+        if "pos" in self.features:
+            pos_emb = self.posEmb(pos)
+            pos_att = self.posAtt(bert_hidden, pos_emb, pos_emb, mask)
+            logits = torch.cat([logits, pos_att], dim=-1)
+        if "ner" in self.features:
+            ner_emb = self.posEmb(ner)
+            ner_att = self.posAtt(bert_hidden, ner_emb, ner_emb, mask)
+            logits = torch.cat([logits, ner_att], dim=-1)
+        if "dp" in self.features:
+            dp_emb = self.posEmb(dp)
+            dp_att = self.posAtt(bert_hidden, dp_emb, dp_emb, mask)
+            logits = torch.cat([logits, dp_att], dim=-1)
 
-        # # feature concat
-        logits = torch.cat([bert_hidden, dp_emb], dim=-1)
         # logits = self.gcn2tag(logits)
-        logits = self.bert2label(logits)
+        logits = self.att2label(logits)
 
         # crf decode
         tag_seq = self.crf_layer.decode(logits, mask=mask)

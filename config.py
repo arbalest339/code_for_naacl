@@ -1,7 +1,7 @@
 '''
 Author: your name
 Date: 2020-09-23 09:23:31
-LastEditTime: 2021-04-14 17:55:39
+LastEditTime: 2021-04-23 14:14:31
 LastEditors: Please set LastEditors
 Description: code and model configs
 FilePath: /entity_disambiguation/config.py
@@ -57,7 +57,7 @@ class Flags(object):
         # train hyper parameters
         self.learning_rate = 3.e-5
         self.epoch = 30
-        self.batch_size = 20 if self.language == "zh" or self.task == "oie" else 32
+        self.batch_size = 50 if self.language == "zh" or self.task == "oie" else 64
         self.test_batch_size = 8
         self.max_length = 128 if self.language == "zh" or self.task == "oie" else 40
         self.dropout_rate = 0.5
@@ -65,9 +65,13 @@ class Flags(object):
         self.patient = 3
         self.use_cuda = True
 
+        # features
+        self.features = ["pos", "dp", "ner"]    # "pos", "dp", "ner"
+        self.feature_dim = 100
+        self.att_hidden = 200
+
         # TransD config
-        self.dp_dim = 100
-        self.margin = 4.0
+        self.use_transd = False
 
         # lstm
         self.lstm_hidden = 300

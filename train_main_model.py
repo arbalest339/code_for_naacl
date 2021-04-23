@@ -18,6 +18,8 @@ from test import en_metrics, zh_metrics
 from data_reader import OIEDataset
 from config import FLAGS, aggcnargs
 
+# os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+
 
 def select_model(flags, bertconfig, aggcnargs):
     if FLAGS.model_type == "bert":
