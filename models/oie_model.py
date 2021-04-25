@@ -1,7 +1,7 @@
 '''
 Author: your name
 Date: 2020-11-01 08:57:41
-LastEditTime: 2021-04-23 17:09:16
+LastEditTime: 2021-04-25 13:55:52
 LastEditors: Please set LastEditors
 Description: In User Settings Edit
 FilePath: /code_for_naacl/models/oie_model.py
@@ -27,6 +27,7 @@ class SeqModel(nn.Module):
         bertconfig.output_hidden_states = True
         self.dp_path = flags.dp_embedding_path
         self.features = flags.features
+        self.use_att = flags.use_att
 
         self.act = nn.Sigmoid()
         self.ln = nn.LayerNorm(bertconfig.hidden_size)
@@ -44,17 +45,20 @@ class SeqModel(nn.Module):
         # features
         if "pos" in self.features:
             self.posEmb = nn.Embedding(len(flags.pos_map), flags.feature_dim)
-            self.posAtt = BasicAttention(bertconfig.hidden_size, flags.feature_dim, flags.feature_dim)
+            # self.posAtt = BasicAttention(bertconfig.hidden_size, flags.feature_dim, flags.feature_dim)
         if "ner" in self.features:
             self.nerEmb = nn.Embedding(len(flags.ner_map), flags.feature_dim)
-            self.nerAtt = BasicAttention(bertconfig.hidden_size, flags.feature_dim, flags.feature_dim)
+            # self.nerAtt = BasicAttention(bertconfig.hidden_size, flags.feature_dim, flags.feature_dim)
         if "dp" in self.features:
             dpEmb = np.load(self.dp_path)
             if flags.use_transd:
                 self.dpEmb = nn.Embedding.from_pretrained(torch.from_numpy(dpEmb))
             else:
                 self.dpEmb = nn.Embedding(len(flags.dp_map), flags.feature_dim)
-            self.dpAtt = BasicAttention(bertconfig.hidden_size, flags.feature_dim, flags.feature_dim)
+            # self.dpAtt = BasicAttention(bertconfig.hidden_size, flags.feature_dim, flags.feature_dim)
+        if self.use_att:
+            att_dim = bertconfig.hidden_size + len(self.features)*flags.feature_dim
+            self.featureAtt = BasicAttention(att_dim, att_dim, att_dim)
 
         # full connection layers
         # self.gcn2tag = nn.Linear(gcnopt.emb_dim + flags.dp_dim, self.label_num)
@@ -78,16 +82,19 @@ class SeqModel(nn.Module):
         # co-att
         if "pos" in self.features:
             pos_emb = self.posEmb(pos)
-            pos_att = self.posAtt(bert_hidden, pos_emb, pos_emb, mask)
-            logits = torch.cat([logits, pos_att], dim=-1)
+            # pos_att = self.posAtt(bert_hidden, pos_emb, pos_emb, mask)
+            logits = torch.cat([logits, pos_emb], dim=-1)
         if "ner" in self.features:
             ner_emb = self.nerEmb(ner)
-            ner_att = self.nerAtt(bert_hidden, ner_emb, ner_emb, mask)
-            logits = torch.cat([logits, ner_att], dim=-1)
+            # ner_att = self.nerAtt(bert_hidden, ner_emb, ner_emb, mask)
+            logits = torch.cat([logits, ner_emb], dim=-1)
         if "dp" in self.features:
             dp_emb = self.dpEmb(dp)
-            dp_att = self.dpAtt(bert_hidden, dp_emb, dp_emb, mask)
-            logits = torch.cat([logits, dp_att], dim=-1)
+            # dp_att = self.dpAtt(bert_hidden, dp_emb, dp_emb, mask)
+            logits = torch.cat([logits, dp_emb], dim=-1)
+        if self.use_att:
+            logits = self.featureAtt(logits, logits, logits, mask)
+        # logits = torch.cat([logits, features], dim=-1)
 
         # logits = self.gcn2tag(logits)
         logits = self.dropout(logits)
@@ -118,18 +125,22 @@ class SeqModel(nn.Module):
         # co-att
         if "pos" in self.features:
             pos_emb = self.posEmb(pos)
-            pos_att = self.posAtt(bert_hidden, pos_emb, pos_emb, mask)
-            logits = torch.cat([logits, pos_att], dim=-1)
+            # pos_att = self.posAtt(bert_hidden, pos_emb, pos_emb, mask)
+            logits = torch.cat([logits, pos_emb], dim=-1)
         if "ner" in self.features:
             ner_emb = self.nerEmb(ner)
-            ner_att = self.nerAtt(bert_hidden, ner_emb, ner_emb, mask)
-            logits = torch.cat([logits, ner_att], dim=-1)
+            # ner_att = self.nerAtt(bert_hidden, ner_emb, ner_emb, mask)
+            logits = torch.cat([logits, ner_emb], dim=-1)
         if "dp" in self.features:
             dp_emb = self.dpEmb(dp)
-            dp_att = self.dpAtt(bert_hidden, dp_emb, dp_emb, mask)
-            logits = torch.cat([logits, dp_att], dim=-1)
+            # dp_att = self.dpAtt(bert_hidden, dp_emb, dp_emb, mask)
+            logits = torch.cat([logits, dp_emb], dim=-1)
+        if self.use_att:
+            logits = self.featureAtt(logits, logits, logits, mask)
+        # logits = torch.cat([logits, features], dim=-1)
 
         # logits = self.gcn2tag(logits)
+        logits = self.dropout(logits)
         logits = self.att2label(logits)
 
         # crf decode

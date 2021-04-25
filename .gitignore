@@ -4,3 +4,4 @@
 *.pkl
 *.vec
 *.bin
+.history/
