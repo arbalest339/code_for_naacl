@@ -1,7 +1,7 @@
 '''
 Author: your name
 Date: 2020-09-23 09:23:31
-LastEditTime: 2021-04-23 14:14:31
+LastEditTime: 2021-04-25 10:12:14
 LastEditors: Please set LastEditors
 Description: code and model configs
 FilePath: /entity_disambiguation/config.py
@@ -66,9 +66,9 @@ class Flags(object):
         self.use_cuda = True
 
         # features
-        self.features = ["pos", "dp", "ner"]    # "pos", "dp", "ner"
+        self.features = ["dp"]    # "pos", "dp", "ner"
         self.feature_dim = 100
-        self.att_hidden = 200
+        self.use_att = False
 
         # TransD config
         self.use_transd = False
