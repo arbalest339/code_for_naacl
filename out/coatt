@@ -1,21 +1,210 @@
-# coatt all transd zh oie
-Start testing 2021-04-23 11:24:41
-Precision:  0.5932, Recall:  0.4233, F1:  0.4941
-Testing finished 2021-04-23 11:25:17
-Start testing 2021-04-23 11:48:11
-Precision:  0.6489, Recall:  0.4108, F1:  0.5031
-Testing finished 2021-04-23 11:48:47
-Start testing 2021-04-23 12:04:46
-Precision:  0.6840, Recall:  0.3737, F1:  0.4834
-Testing finished 2021-04-23 12:05:22
-Start testing 2021-04-23 12:21:21
-Precision:  0.6473, Recall:  0.4028, F1:  0.4966
-Testing finished 2021-04-23 12:21:56
-Start testing 2021-04-23 12:38:18
-Precision:  0.6598, Recall:  0.3960, F1:  0.4949
-Testing finished 2021-04-23 12:38:54
-Start testing 2021-04-23 12:55:06
-Precision:  0.6656, Recall:  0.3852, F1:  0.4880
-Testing finished 2021-04-23 12:55:41
+# all not att no transd zh oie
+Start testing 2021-04-24 13:50:04
+Precision:  0.6630, Recall:  0.3877, F1:  0.4893
+Testing finished 2021-04-24 13:50:48
+Start testing 2021-04-24 14:06:27
+Precision:  0.6495, Recall:  0.4020, F1:  0.4966
+Testing finished 2021-04-24 14:06:59
+Start testing 2021-04-24 14:22:52
+Precision:  0.6480, Recall:  0.4138, F1:  0.5051
+Testing finished 2021-04-24 14:23:27
+Start testing 2021-04-24 14:39:14
+Precision:  0.6283, Recall:  0.4068, F1:  0.4939
+Testing finished 2021-04-24 14:39:59
+Start testing 2021-04-24 14:55:32
+Precision:  0.6469, Recall:  0.3970, F1:  0.4920
+Testing finished 2021-04-24 14:56:06
 
-# coatt all no trans zh oie
+# dp not att no transd zh oie
+Start testing 2021-04-24 17:38:57
+Precision:  0.6228, Recall:  0.4045, F1:  0.4904
+Testing finished 2021-04-24 17:39:41
+Start testing 2021-04-24 17:55:24
+Precision:  0.6342, Recall:  0.3947, F1:  0.4866
+Testing finished 2021-04-24 17:55:56
+Start testing 2021-04-24 18:11:28
+Precision:  0.6335, Recall:  0.4082, F1:  0.4965
+Testing finished 2021-04-24 18:12:02
+Start testing 2021-04-24 18:28:02
+Precision:  0.6390, Recall:  0.4059, F1:  0.4964
+Testing finished 2021-04-24 18:28:46
+Start testing 2021-04-24 18:44:28
+Precision:  0.6010, Recall:  0.4176, F1:  0.4928
+Testing finished 2021-04-24 18:45:02
+
+# dp co-att no transd zh oie
+Start testing 2021-04-25 14:17:21
+Precision:  0.6053, Recall:  0.4136, F1:  0.4914
+Testing finished 2021-04-25 14:17:55
+Start testing 2021-04-25 14:36:54
+Precision:  0.5698, Recall:  0.4404, F1:  0.4968
+Testing finished 2021-04-25 14:37:40
+Start testing 2021-04-25 14:57:05
+Precision:  0.5565, Recall:  0.4414, F1:  0.4923
+Testing finished 2021-04-25 14:57:50
+Start testing 2021-04-25 15:19:30
+Precision:  0.5849, Recall:  0.4254, F1:  0.4926
+Testing finished 2021-04-25 15:20:03
+Start testing 2021-04-25 15:41:45
+Precision:  0.5772, Recall:  0.4315, F1:  0.4938
+Testing finished 2021-04-25 15:42:18
+
+# all co-att no transd zh oie
+Start testing 2021-04-25 16:49:05
+Precision:  0.5963, Recall:  0.4193, F1:  0.4924
+Testing finished 2021-04-25 16:49:37
+Start testing 2021-04-25 17:08:39
+Precision:  0.5980, Recall:  0.4336, F1:  0.5027
+Testing finished 2021-04-25 17:09:23
+Start testing 2021-04-25 17:22:36
+Precision:  0.6262, Recall:  0.4188, F1:  0.5020    ！！！！
+Testing finished 2021-04-25 17:23:11
+Start testing 2021-04-25 17:42:15
+Precision:  0.6215, Recall:  0.4104, F1:  0.4944
+Testing finished 2021-04-25 17:42:50
+
+# all lstm no transd zh oie
+Start testing 2021-04-25 18:52:16
+Precision:  0.5938, Recall:  0.4345, F1:  0.5018
+Testing finished 2021-04-25 18:52:59
+Start testing 2021-04-25 19:11:49
+Precision:  0.6279, Recall:  0.4061, F1:  0.4932
+Testing finished 2021-04-25 19:12:33
+Start testing 2021-04-25 19:31:12
+Precision:  0.6449, Recall:  0.3830, F1:  0.4806
+Testing finished 2021-04-25 19:31:58
+
+# all norm zh oie
+Start testing 2021-04-25 20:01:16
+Precision:  0.6079, Recall:  0.4153, F1:  0.4935    ！！！！
+Testing finished 2021-04-25 20:01:49
+Start testing 2021-04-25 20:15:08
+Precision:  0.6441, Recall:  0.3911, F1:  0.4867
+Testing finished 2021-04-25 20:15:41
+
+# all norm zh ore
+Start testing 2021-04-25 20:30:06
+Precision:  0.8220, Recall:  0.8601, F1:  0.8406
+Testing finished 2021-04-25 20:30:35
+Start testing 2021-04-25 20:41:38
+Precision:  0.8275, Recall:  0.8543, F1:  0.8407
+Testing finished 2021-04-25 20:42:07
+Start testing 2021-04-25 20:52:22
+Precision:  0.8232, Recall:  0.8639, F1:  0.8431    ！！！！
+Testing finished 2021-04-25 20:52:52
+
+# all att zh ore
+Start testing 2021-04-25 21:06:02
+Precision:  0.8239, Recall:  0.8803, F1:  0.8512
+Testing finished 2021-04-25 21:06:34
+Start testing 2021-04-25 21:23:38
+Precision:  0.8524, Recall:  0.8642, F1:  0.8582    ！！！！
+Testing finished 2021-04-25 21:24:08
+Start testing 2021-04-25 21:38:30
+Precision:  0.8492, Recall:  0.8596, F1:  0.8544
+Testing finished 2021-04-25 21:39:00
+
+# all att en ore
+Start testing 2021-04-25 21:49:13
+Precision:  0.7749, Recall:  0.8271, F1:  0.8002
+Testing finished 2021-04-25 21:49:35
+Start testing 2021-04-25 21:59:14
+Precision:  0.8091, Recall:  0.7913, F1:  0.8001
+Testing finished 2021-04-25 21:59:42
+Start testing 2021-04-25 22:05:54
+Precision:  0.7568, Recall:  0.8075, F1:  0.7813
+Testing finished 2021-04-25 22:06:15
+Start testing 2021-04-25 22:17:57
+Precision:  0.8005, Recall:  0.8051, F1:  0.8028    ！！！！
+Testing finished 2021-04-25 22:18:18
+
+# all norm en ore
+Start testing 2021-04-25 23:15:59
+Precision:  0.7887, Recall:  0.8153, F1:  0.8018
+Testing finished 2021-04-25 23:16:20
+Start testing 2021-04-25 23:19:09
+Precision:  0.7947, Recall:  0.8072, F1:  0.8009
+Testing finished 2021-04-25 23:19:32
+
+# all att en ore 0.7
+Start testing 2021-04-25 23:49:47
+Precision:  0.7754, Recall:  0.8103, F1:  0.7925
+Testing finished 2021-04-25 23:50:09
+Start testing 2021-04-25 23:56:06
+Precision:  0.7777, Recall:  0.8284, F1:  0.8022
+Testing finished 2021-04-25 23:56:28
+Start testing 2021-04-26 00:04:44
+Precision:  0.7517, Recall:  0.8481, F1:  0.7970
+Testing finished 2021-04-26 00:05:05
+Start testing 2021-04-26 00:15:41
+Precision:  0.7875, Recall:  0.8122, F1:  0.7996
+Testing finished 2021-04-26 00:16:08
+Start testing 2021-04-26 00:29:02
+Precision:  0.8015, Recall:  0.8017, F1:  0.8016
+Testing finished 2021-04-26 00:29:24
+
+# all att en ore 0.75
+Start testing 2021-04-26 08:48:13
+Precision:  0.7957, Recall:  0.8078, F1:  0.8017
+Testing finished 2021-04-26 08:48:34
+Start testing 2021-04-26 08:54:32
+Precision:  0.7671, Recall:  0.8375, F1:  0.8008
+Testing finished 2021-04-26 08:54:55
+Start testing 2021-04-26 09:06:35
+Precision:  0.8009, Recall:  0.8039, F1:  0.8024
+Testing finished 2021-04-26 09:07:03
+Start testing 2021-04-26 09:17:24
+Precision:  0.7950, Recall:  0.8059, F1:  0.8004
+Testing finished 2021-04-26 09:17:46
+
+# all att en ore 0.8
+Start testing 2021-04-26 09:26:52
+Precision:  0.7778, Recall:  0.8150, F1:  0.7960
+Testing finished 2021-04-26 09:27:13
+Start testing 2021-04-26 09:35:39
+Precision:  0.7681, Recall:  0.8390, F1:  0.8020
+Testing finished 2021-04-26 09:36:05
+Start testing 2021-04-26 09:45:21
+Precision:  0.7950, Recall:  0.8198, F1:  0.8072
+Testing finished 2021-04-26 09:45:43
+Start testing 2021-04-26 09:56:18
+Precision:  0.7979, Recall:  0.8115, F1:  0.8047
+Testing finished 2021-04-26 09:56:40
+
+# all norm en ore 0.8
+Start testing 2021-04-26 10:03:14
+Precision:  0.7828, Recall:  0.8157, F1:  0.7989
+Testing finished 2021-04-26 10:03:35
+Start testing 2021-04-26 10:09:29
+Precision:  0.7863, Recall:  0.8414, F1:  0.8129
+Testing finished 2021-04-26 10:09:49
+Start testing 2021-04-26 10:15:47
+Precision:  0.7960, Recall:  0.8218, F1:  0.8087
+Testing finished 2021-04-26 10:16:14
+Start testing 2021-04-26 10:20:58
+Precision:  0.7770, Recall:  0.8286, F1:  0.8020
+Testing finished 2021-04-26 10:21:19
+Start testing 2021-04-26 10:27:08
+Precision:  0.7654, Recall:  0.8476, F1:  0.8044
+Testing finished 2021-04-26 10:27:34
+
+# all norm zh ore 0.7
+Start testing 2021-04-26 11:10:04
+Precision:  0.8150, Recall:  0.8643, F1:  0.8389
+Testing finished 2021-04-26 11:10:34
+Start testing 2021-04-26 11:25:02
+Precision:  0.8402, Recall:  0.8444, F1:  0.8423
+Testing finished 2021-04-26 11:25:33
+
+# all att zh ore 0.7
+Start testing 2021-04-26 11:52:38
+Precision:  0.8377, Recall:  0.8814, F1:  0.8590
+Testing finished 2021-04-26 11:53:18
+
+# all att zh oie 0.7
+Start testing 2021-04-26 12:39:14
+Precision:  0.6412, Recall:  0.4144, F1:  0.5035
+Testing finished 2021-04-26 12:39:49
+Start testing 2021-04-26 12:56:00
+Precision:  0.6137, Recall:  0.4358, F1:  0.5097
+Testing finished 2021-04-26 12:56:35
