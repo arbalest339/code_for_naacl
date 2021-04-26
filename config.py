@@ -1,7 +1,7 @@
 '''
 Author: your name
 Date: 2020-09-23 09:23:31
-LastEditTime: 2021-04-25 10:12:14
+LastEditTime: 2021-04-26 12:22:38
 LastEditors: Please set LastEditors
 Description: code and model configs
 FilePath: /entity_disambiguation/config.py
@@ -60,15 +60,15 @@ class Flags(object):
         self.batch_size = 50 if self.language == "zh" or self.task == "oie" else 64
         self.test_batch_size = 8
         self.max_length = 128 if self.language == "zh" or self.task == "oie" else 40
-        self.dropout_rate = 0.5
+        self.dropout_rate = 0.6
         self.weight_decay = 1.e-3
-        self.patient = 3
+        self.patient = 2
         self.use_cuda = True
 
         # features
-        self.features = ["dp"]    # "pos", "dp", "ner"
+        self.features = ["pos", "dp", "ner"]    # "pos", "dp", "ner"
         self.feature_dim = 100
-        self.use_att = False
+        self.fusion = "att"  # att lstm norm
 
         # TransD config
         self.use_transd = False
