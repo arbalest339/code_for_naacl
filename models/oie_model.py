@@ -1,7 +1,7 @@
 '''
 Author: your name
 Date: 2020-11-01 08:57:41
-LastEditTime: 2021-04-26 11:47:55
+LastEditTime: 2021-04-27 09:00:19
 LastEditors: Please set LastEditors
 Description: In User Settings Edit
 FilePath: /code_for_naacl/models/oie_model.py
@@ -110,8 +110,10 @@ class SeqModel(nn.Module):
                 feature = dp_emb
             else:
                 feature = torch.cat([feature, dp_emb], dim=-1)
-
-        logits = torch.cat([bert_hidden, feature], dim=-1)
+        if len(self.features) > 0:
+            logits = torch.cat([bert_hidden, feature], dim=-1)
+        else:
+            logits = bert_hidden
         if self.fusion == "att":
             # logits = torch.cat([bert_hidden, feature], dim=-1)
             logits = self.featureAtt(logits, logits, logits, mask)
@@ -168,7 +170,10 @@ class SeqModel(nn.Module):
                 feature = dp_emb
             else:
                 feature = torch.cat([feature, dp_emb], dim=-1)
-        logits = torch.cat([bert_hidden, feature], dim=-1)
+        if len(self.features) > 0:
+            logits = torch.cat([bert_hidden, feature], dim=-1)
+        else:
+            logits = bert_hidden
         if self.fusion == "att":
             # logits = torch.cat([bert_hidden, feature], dim=-1)
             logits = self.featureAtt(logits, logits, logits, mask)
