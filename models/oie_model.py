@@ -1,7 +1,7 @@
 '''
 Author: your name
 Date: 2020-11-01 08:57:41
-LastEditTime: 2021-04-27 09:00:19
+LastEditTime: 2021-05-12 17:36:25
 LastEditors: Please set LastEditors
 Description: In User Settings Edit
 FilePath: /code_for_naacl/models/oie_model.py
@@ -59,8 +59,9 @@ class SeqModel(nn.Module):
                 self.dpEmb = nn.Embedding(len(flags.dp_map), flags.feature_dim)
             # self.dpAtt = BasicAttention(bertconfig.hidden_size, flags.feature_dim, flags.feature_dim)
         if self.fusion == "att":
-            att_dim = bertconfig.hidden_size + \
-                len(self.features)*flags.feature_dim
+            # att_dim = bertconfig.hidden_size + \
+            #     len(self.features)*flags.feature_dim
+            att_dim = flags.max_length
             self.featureAtt = BasicAttention(att_dim, att_dim, att_dim)
         if self.fusion == "lstm":
             lstm_dim = bertconfig.hidden_size + len(self.features)*flags.feature_dim
@@ -116,7 +117,9 @@ class SeqModel(nn.Module):
             logits = bert_hidden
         if self.fusion == "att":
             # logits = torch.cat([bert_hidden, feature], dim=-1)
-            logits = self.featureAtt(logits, logits, logits, mask)
+            logits = logits.permute([0, 2, 1])
+            logits = self.featureAtt(logits, logits, logits)
+            logits = logits.permute([0, 2, 1])
         if self.fusion == "lstm":
             # logits = torch.cat([bert_hidden, feature], dim=-1)
             logits, _ = self.bilstm_layer(logits)
@@ -176,7 +179,9 @@ class SeqModel(nn.Module):
             logits = bert_hidden
         if self.fusion == "att":
             # logits = torch.cat([bert_hidden, feature], dim=-1)
-            logits = self.featureAtt(logits, logits, logits, mask)
+            logits = logits.permute([0, 2, 1])
+            logits = self.featureAtt(logits, logits, logits)
+            logits = logits.permute([0, 2, 1])
         if self.fusion == "lstm":
             # logits = torch.cat([bert_hidden, feature], dim=-1)
             logits, _ = self.bilstm_layer(logits)

@@ -64,7 +64,7 @@ class OIEDataset(data.Dataset):
                 mask = [1] * (token_length + 2) + [0] * pad_length
                 # matrix pad
                 for i, row in enumerate(matrix):
-                    matrix[i] = row + [0.0] * (pad_length + 1)
+                    matrix[i] = np.concatenate([row, [0.0] * (pad_length + 1)])
                 for i in range(pad_length + 1):
                     matrix.append([0.0] * (self.max_length + 2))
             else:
@@ -148,7 +148,7 @@ class OIEDataset(data.Dataset):
                 mask = [1] * (token_length + 2) + [0] * pad_length
                 # matrix pad
                 for i, row in enumerate(matrix):
-                    matrix[i] = row + [0.0] * (pad_length + 1)
+                    matrix[i] = np.concatenate([row, [0.0] * (pad_length + 1)])
                 for i in range(pad_length + 1):
                     matrix.append([0.0] * (self.max_length + 2))
             else:
@@ -249,7 +249,7 @@ class AnalyseDataset(data.Dataset):
                 mask = [1] * (token_length + 2) + [0] * pad_length
                 # matrix pad
                 for i, row in enumerate(matrix):
-                    matrix[i] = row + [0.0] * (pad_length + 1)
+                    matrix[i] = np.concatenate([row, [0.0] * (pad_length + 1)])
                 for i in range(pad_length + 1):
                     matrix.append([0.0] * (self.max_length + 2))
             else:
