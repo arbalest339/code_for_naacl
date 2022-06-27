@@ -1,8 +1,8 @@
 '''
 Author: your name
 Date: 2020-11-01 08:57:41
-LastEditTime: 2021-05-12 17:36:25
-LastEditors: Please set LastEditors
+LastEditTime: 2022-05-15 12:22:30
+LastEditors: arbalest339 17801188346@163.com
 Description: In User Settings Edit
 FilePath: /code_for_naacl/models/oie_model.py
 '''
@@ -40,8 +40,8 @@ class SeqModel(nn.Module):
 
         # aggcn
         # self.bert2label = nn.Linear(bertconfig.hidden_size + flags.dp_dim, self.label_num)
-        # self.bert2gcn = nn.Linear(bertconfig.hidden_size, gcnopt.emb_dim)
-        # self.aggcn = AGGCN(gcnopt, flags)
+        self.bert2gcn = nn.Linear(bertconfig.hidden_size, gcnopt.emb_dim)
+        self.aggcn = AGGCN(gcnopt, flags)
 
         # features
         if "pos" in self.features:
@@ -59,17 +59,16 @@ class SeqModel(nn.Module):
                 self.dpEmb = nn.Embedding(len(flags.dp_map), flags.feature_dim)
             # self.dpAtt = BasicAttention(bertconfig.hidden_size, flags.feature_dim, flags.feature_dim)
         if self.fusion == "att":
-            # att_dim = bertconfig.hidden_size + \
-            #     len(self.features)*flags.feature_dim
-            att_dim = flags.max_length
-            self.featureAtt = BasicAttention(att_dim, att_dim, att_dim)
+            att_dim = len(self.features)*flags.feature_dim
+            self.featureAtt = BasicAttention(bertconfig.hidden_size, bertconfig.hidden_size, att_dim)
+            self.selfAtt = BasicAttention(flags.max_length, flags.max_length, flags.max_length)
         if self.fusion == "lstm":
             lstm_dim = bertconfig.hidden_size + len(self.features)*flags.feature_dim
             self.bilstm_layer = nn.LSTM(
                 lstm_dim, lstm_dim//2, 2, batch_first=True, bidirectional=True)
 
         # full connection layers
-        # self.gcn2tag = nn.Linear(gcnopt.emb_dim + flags.dp_dim, self.label_num)
+        self.gcn2tag = nn.Linear(gcnopt.emb_dim + len(self.features)*flags.feature_dim, self.label_num)
         self.att2label = nn.Linear(
             bertconfig.hidden_size + len(self.features)*flags.feature_dim, self.label_num)
 
@@ -84,8 +83,9 @@ class SeqModel(nn.Module):
         # bert_hidden = self.ln(bert_hidden)
         # bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
 
-        # gcn_input = self.bert2gcn(bert_hidden)
-        # gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
+        if self.fusion == "gcn":
+            gcn_input = self.bert2gcn(bert_hidden)
+            gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
 
         feature = None
         # fc layer
@@ -112,21 +112,27 @@ class SeqModel(nn.Module):
             else:
                 feature = torch.cat([feature, dp_emb], dim=-1)
         if len(self.features) > 0:
-            logits = torch.cat([bert_hidden, feature], dim=-1)
+            if self.fusion == "att":
+                feature = self.featureAtt(bert_hidden, bert_hidden, feature)
+                logits = torch.cat([bert_hidden, feature], dim=-1)
+            if self.fusion == "gcn":
+                logits = torch.cat([gcn_hidden, feature], dim=-1)
         else:
             logits = bert_hidden
-        if self.fusion == "att":
-            # logits = torch.cat([bert_hidden, feature], dim=-1)
-            logits = logits.permute([0, 2, 1])
-            logits = self.featureAtt(logits, logits, logits)
-            logits = logits.permute([0, 2, 1])
+        # if self.fusion == "att":
+        #     # logits = torch.cat([bert_hidden, feature], dim=-1)
+        #     logits = logits.permute([0, 2, 1])
+        #     logits = self.selfAtt(logits, logits, logits)
+        #     logits = logits.permute([0, 2, 1])
         if self.fusion == "lstm":
             # logits = torch.cat([bert_hidden, feature], dim=-1)
             logits, _ = self.bilstm_layer(logits)
 
-            # logits = self.gcn2tag(logits)
         logits = self.dropout(logits)
-        logits = self.att2label(logits)
+        if self.fusion == "gcn":
+            logits = self.gcn2tag(logits)
+        else:
+            logits = self.att2label(logits)
 
         # crf loss
         loss = - self.crf_layer(logits, gold, mask=mask, reduction="mean")
@@ -142,12 +148,15 @@ class SeqModel(nn.Module):
         return loss, acc, zero_acc
 
     def decode(self, token, pos, ner, dp, head, matrix, mask):
-        bert_hidden = self.bert(token, attention_mask=mask).hidden_states[-1]
+        # BERT's last hidden layer
+        bert_hidden = self.bert(
+            token, attention_mask=mask).hidden_states[-1]
         # bert_hidden = self.ln(bert_hidden)
         # bert_hidden = self.dropout(bert_hidden)     # batch_size, max_length, bert_hidden
 
-        # gcn_input = self.bert2gcn(bert_hidden)
-        # gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
+        if self.fusion == "gcn":
+            gcn_input = self.bert2gcn(bert_hidden)
+            gcn_hidden, pool_mask = self.aggcn(gcn_input, pos, ner, matrix, mask)
 
         feature = None
         # fc layer
@@ -174,21 +183,27 @@ class SeqModel(nn.Module):
             else:
                 feature = torch.cat([feature, dp_emb], dim=-1)
         if len(self.features) > 0:
-            logits = torch.cat([bert_hidden, feature], dim=-1)
+            if self.fusion == "att":
+                feature = self.featureAtt(bert_hidden, bert_hidden, feature)
+                logits = torch.cat([bert_hidden, feature], dim=-1)
+            if self.fusion == "gcn":
+                logits = torch.cat([gcn_hidden, feature], dim=-1)
         else:
             logits = bert_hidden
-        if self.fusion == "att":
-            # logits = torch.cat([bert_hidden, feature], dim=-1)
-            logits = logits.permute([0, 2, 1])
-            logits = self.featureAtt(logits, logits, logits)
-            logits = logits.permute([0, 2, 1])
+        # if self.fusion == "att":
+        #     # logits = torch.cat([bert_hidden, feature], dim=-1)
+        #     logits = logits.permute([0, 2, 1])
+        #     logits = self.selfAtt(logits, logits, logits)
+        #     logits = logits.permute([0, 2, 1])
         if self.fusion == "lstm":
             # logits = torch.cat([bert_hidden, feature], dim=-1)
             logits, _ = self.bilstm_layer(logits)
 
-        # logits = self.gcn2tag(logits)
         logits = self.dropout(logits)
-        logits = self.att2label(logits)
+        if self.fusion == "gcn":
+            logits = self.gcn2tag(logits)
+        else:
+            logits = self.att2label(logits)
 
         # crf decode
         tag_seq = self.crf_layer.decode(logits, mask=mask)

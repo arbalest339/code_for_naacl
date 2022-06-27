@@ -318,3 +318,81 @@ Testing finished 2021-04-28 13:21:26
 Start testing 2021-04-28 13:47:11
 Precision:  0.5327, Recall:  0.4488, F1:  0.4872
 Testing finished 2021-04-28 13:47:45
+
+pos+dp att
+Start testing 2021-05-12 11:53:08
+Precision:  0.8605, Recall:  0.8575, F1:  0.8590
+Testing finished 2021-05-12 11:55:55
+
+all att
+Start testing 2021-05-13 00:18:41
+Precision:  0.8653, Recall:  0.8584, F1:  0.8618    ！！！！
+Testing finished 2021-05-13 00:21:28
+Start testing 2021-05-13 12:15:12
+Precision:  0.8142, Recall:  0.8190, F1:  0.8166
+Testing finished 2021-05-13 12:15:47
+Start testing 2021-05-13 13:03:39
+Precision:  0.8305, Recall:  0.7754, F1:  0.8020
+Testing finished 2021-05-13 13:04:12
+Start testing 2021-05-13 13:58:16
+Precision:  0.8236, Recall:  0.8055, F1:  0.8144
+Testing finished 2021-05-13 13:58:48
+Start testing 2021-05-13 14:21:18
+Precision:  0.8060, Recall:  0.8806, F1:  0.8417
+Testing finished 2021-05-13 14:21:51
+Start testing 2021-05-13 14:34:55
+Precision:  0.8092, Recall:  0.8757, F1:  0.8411
+Testing finished 2021-05-13 14:35:27
+Start testing 2021-05-13 14:48:57
+Precision:  0.8278, Recall:  0.8569, F1:  0.8421
+Testing finished 2021-05-13 14:49:29
+Start testing 2021-05-13 15:03:03
+Precision:  0.8154, Recall:  0.8671, F1:  0.8405
+Testing finished 2021-05-13 15:03:38
+Start testing 2021-05-13 15:17:05
+Precision:  0.8136, Recall:  0.8753, F1:  0.8433
+Testing finished 2021-05-13 15:17:35
+
+wogcn&dp
+Start testing 2022-05-14 09:55:32
+Precision:  0.8283, Recall:  0.9133, F1:  0.8687
+Precision:  0.8193, Recall:  0.8836, F1:  0.8503
+Precision:  0.7883, Recall:  0.8199, F1:  0.8038
+Precision:  0.8136, Recall:  0.8753, F1:  0.8433
+Testing finished 2022-05-14 09:56:06
+
+wogcn
+Start testing 2022-05-14 10:00:46
+Precision:  0.8595, Recall:  0.8841, F1:  0.8716
+Precision:  0.8347, Recall:  0.8508, F1:  0.8427
+Precision:  0.8149, Recall:  0.8126, F1:  0.8137
+Precision:  0.8382, Recall:  0.8516, F1:  0.8449
+Testing finished 2022-05-14 10:01:21
+Start testing 2022-05-14 10:05:37
+Precision:  0.8725, Recall:  0.8767, F1:  0.8746
+Precision:  0.8229, Recall:  0.8660, F1:  0.8439
+Precision:  0.8079, Recall:  0.8157, F1:  0.8118
+Precision:  0.8368, Recall:  0.8546, F1:  0.8456
+Testing finished 2022-05-14 10:06:10
+
+wodp
+Start testing 2022-05-19 10:37:50
+Precision:  0.8184, Recall:  0.9436, F1:  0.8765
+Precision:  0.8344, Recall:  0.8657, F1:  0.8497
+Precision:  0.7950, Recall:  0.8443, F1:  0.8189
+Precision:  0.8162, Recall:  0.8885, F1:  0.8508
+Testing finished 2022-05-19 10:38:34
+
+all
+Start testing 2022-05-19 11:52:01
+Precision:  0.8306, Recall:  0.9447, F1:  0.8840
+Precision:  0.8349, Recall:  0.8640, F1:  0.8492
+Precision:  0.7647, Recall:  0.8774, F1:  0.8172
+Precision:  0.8109, Recall:  0.8986, F1:  0.8525
+Testing finished 2022-05-19 11:52:45
+Start testing 2022-05-19 16:02:16
+Precision:  0.8226, Recall:  0.9379, F1:  0.8765
+Precision:  0.8217, Recall:  0.8792, F1:  0.8495
+Precision:  0.7916, Recall:  0.8359, F1:  0.8131
+Precision:  0.8131, Recall:  0.8881, F1:  0.8489
+Testing finished 2022-05-19 16:03:00

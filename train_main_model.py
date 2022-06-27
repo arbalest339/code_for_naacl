@@ -65,9 +65,9 @@ def test(model, test_set):
         # tag_seq = tag_seq.cpu().detach().numpy().tolist()
         # en_metrics(e1, e2, r, tag_seq) if FLAGS.language == "en" else
         pt, pf, nf = zh_metrics(e1, e2, r, tag_seq)
-        positive_true += pt
-        positive_false += pf
-        negative_false += nf
+        positive_true += sum(pt)
+        positive_false += sum(pf)
+        negative_false += sum(nf)
 
     precision = positive_true / (positive_false + positive_true)
     recall = positive_true / (positive_true + negative_false)

@@ -1,8 +1,8 @@
 '''
 Author: your name
 Date: 2020-09-23 09:23:31
-LastEditTime: 2021-04-28 12:00:11
-LastEditors: Please set LastEditors
+LastEditTime: 2022-05-19 12:28:43
+LastEditors: arbalest339 17801188346@163.com
 Description: code and model configs
 FilePath: /entity_disambiguation/config.py
 '''
@@ -16,7 +16,7 @@ class Flags(object):
     def __init__(self):
         # task info
         self.language = "zh"    # en, zh
-        self.task = "oie"    # dp_emb, ore, oie
+        self.task = "ore"    # dp_emb, ore, oie
         self.model_type = "bert"   # cnn_lstm, bert
         self.is_continue = False
         self.is_test = False
@@ -36,7 +36,7 @@ class Flags(object):
         self.embedding_path = os.path.join(curpath, f"pretrained/wiki.{self.language}.align.vec")
 
         self.checkpoint_dir = os.path.join(curpath, "checkpoints")  # Path of model checkpoints
-        self.checkpoint_path = os.path.join(self.checkpoint_dir, f"{self.task}_{self.language}.pkl")
+        self.checkpoint_path = os.path.join(self.checkpoint_dir, f"{self.task}_{self.language}_wodp.pkl")
         self.dp_checkpoint_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}.pkl")
         self.dp_embedding_path = os.path.join(self.checkpoint_dir, f"dp_emb_{self.language}(4-64).npy")
         if self.language == "en" and self.task == "oie":
@@ -57,18 +57,18 @@ class Flags(object):
         # train hyper parameters
         self.learning_rate = 3.e-5
         self.epoch = 30
-        self.batch_size = 40 if self.language == "zh" or self.task == "oie" else 64
+        self.batch_size = 32 if self.language == "zh" or self.task == "oie" else 64
         self.test_batch_size = 8
         self.max_length = 128 if self.language == "zh" or self.task == "oie" else 40
-        self.dropout_rate = 0.7
+        self.dropout_rate = 0.5
         self.weight_decay = 1.e-3
         self.patient = 2
         self.use_cuda = True
 
         # features
-        self.features = ["pos", "dp"]    # "pos", "dp", "ner"
+        self.features = ["pos", "ner"]    # "pos", "dp", "ner"
         self.feature_dim = 100
-        self.fusion = "att"  # att lstm norm
+        self.fusion = "gcn"  # att lstm norm
 
         # TransD config
         self.use_transd = False
